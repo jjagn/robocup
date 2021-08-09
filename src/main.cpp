@@ -19,5 +19,4 @@ void loop() {
     delay(50); // poll at 1kHz
     IRResult = IRSense(); // take input from IR reading function
     motorControl(IRResult); // control motors based on sensor output
-    
 }
