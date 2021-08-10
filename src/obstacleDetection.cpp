@@ -11,7 +11,7 @@ static int LeftProx = 200;
 
 int mode = 0;
 
-int IRSense() {
+int detectObstacle() {
     // takes sensor values from both IR sensors, outputs 1, 2, 3, or 4 for
     // obstacles right, left, all clear or fully obstructed respectively
     IRRightVal = analogRead(IRin1);

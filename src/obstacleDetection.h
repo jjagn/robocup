@@ -3,10 +3,10 @@
 //************************************
 
 
-#ifndef IR_SENSE_H
-#define IR_SENSE_H
+#ifndef OBSTACLE_DETECTION_H
+#define OBSTACLE_DETECTION_H
 
 // Take IR readings, output vale depending on obstruction
-int IRSense();
+int detectObstacle();
 
 #endif
