@@ -1,8 +1,9 @@
 #include <Arduino.h>
 #include <Servo.h>
 
-#include "IRSense.h"
+#include "obstacleDetection.h"
 #include "motorControl.h"
+#include "weightDetection.h"
 
 int IRResult;
 
@@ -16,7 +17,8 @@ void setup() {
 
 void loop() {
 
-    delay(50); // poll at 1kHz
-    IRResult = IRSense(); // take input from IR reading function
+    delay(250); // poll at 1kHz
+    IRResult = detectObstacle(); // take input from IR reading function
     motorControl(IRResult); // control motors based on sensor output
+    // Serial.println("looped");
 }

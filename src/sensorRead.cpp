@@ -13,6 +13,7 @@ int readSensors(int sensorPin) {
         int tempVal = analogRead(sensorPin);
 
         sum += tempVal;
+        i++;
     }
 
     return (sum / FILTER_PERIOD);

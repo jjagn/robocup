@@ -21,7 +21,6 @@ int detectWeights() {
     if (IRRightVal > RightProx && IRLeftVal > LeftProx) {
         // we have detected a weight, somewhere out there
         weightHeading = IRRightVal - IRLeftVal;
-        Serial.println(weightHeading);
     }
-
+    return weightHeading;
 }
