@@ -11,4 +11,14 @@ void motorControl(int IRVal);
 
 void initMotors();
 
+void turnLeft();
+
+void turnRight();
+
+void driveStraight();
+
+void creep();
+
+void reverse();
+
 #endif

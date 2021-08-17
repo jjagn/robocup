@@ -21,6 +21,8 @@ int detectWeights() {
     if (IRRightVal > RightProx && IRLeftVal > LeftProx) {
         // we have detected a weight, somewhere out there
         weightHeading = IRRightVal - IRLeftVal;
+    } else {
+        weightHeading = 9999;
     }
     return weightHeading;
 }

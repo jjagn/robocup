@@ -23,32 +23,54 @@ void initMotors() {
 void motorControl(int IRVal) {
     switch(IRVal) {
         case(1):
-            Serial.println("Obstacle right");
-            right.writeMicroseconds(FORWARD_SLOW);      // turn left 
-            left.writeMicroseconds(BACKWARD_SLOW);       // 
+            turnLeft();
             break;
 
         case(2):
-            Serial.println("Obstacle left");
-            right.writeMicroseconds(BACKWARD_SLOW);      // turn right
-            left.writeMicroseconds(FORWARD_SLOW);       // 
+            turnRight();
             break;
 
         case(3):
-            Serial.println("All clear");
-            right.writeMicroseconds(FORWARD_FAST);      // forward slow  
-            left.writeMicroseconds(FORWARD_FAST);       // 
+            driveStraight();
             break;
 
         case(4):
             Serial.println("Fully obstructed");
             // drive both backwards then turn left?
-            right.writeMicroseconds(BACKWARD_SLOW);      
-            left.writeMicroseconds(BACKWARD_SLOW);
+            reverse();
             delay(1000);
-            right.writeMicroseconds(BACKWARD_SLOW);
-            left.writeMicroseconds(FORWARD_SLOW);   
+            turnLeft();
             delay(500);
             break;
     }
+}
+
+void turnLeft() {
+    Serial.println("turning left");
+    right.writeMicroseconds(FORWARD_SLOW);      // turn left 
+    left.writeMicroseconds(BACKWARD_SLOW); 
+}
+
+void turnRight() {
+    Serial.println("turning right");
+    right.writeMicroseconds(BACKWARD_SLOW);      // turn right
+    left.writeMicroseconds(FORWARD_SLOW);  
+}
+
+void driveStraight() {
+    Serial.println("driving straight");
+    right.writeMicroseconds(FORWARD_FAST);
+    left.writeMicroseconds(FORWARD_FAST);
+}
+
+void creep() {
+    Serial.println("creeping forward");
+    right.writeMicroseconds(FORWARD_SLOW);
+    left.writeMicroseconds(FORWARD_SLOW);
+}
+
+void reverse() {
+    Serial.println("reversing");
+    right.writeMicroseconds(BACKWARD_SLOW);
+    left.writeMicroseconds(BACKWARD_SLOW);
 }

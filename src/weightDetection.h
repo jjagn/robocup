@@ -7,6 +7,6 @@
 #ifndef WEIGHT_DETECT_H
 #define WEIGHT_DETECT_H
 
-void detectWeights(int weightValue);
+int detectWeights();
 
 #endif
