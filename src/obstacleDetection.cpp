@@ -12,7 +12,7 @@ const int IRPPinLeft = A0;
 static int IRRightVal;
 static int IRLeftVal;
 
-static int RightProx = 00;
+static int RightProx = 200;
 static int LeftProx = 200;
 
 int mode = 0;
