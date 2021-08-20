@@ -5,6 +5,8 @@
 
 #define FILTER_PERIOD 10
 
+// make this into a moving average filter
+
 int readSensors(int sensorPin) {
     int sum = 0;
     int i = 0;
