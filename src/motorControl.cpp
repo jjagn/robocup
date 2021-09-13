@@ -18,32 +18,6 @@ void initMotors() {
     left.writeMicroseconds(STOP);
     right.writeMicroseconds(STOP);
 }
-    
-
-void motorControl(int IRVal) {
-    switch(IRVal) {
-        case(1):
-            turnLeft();
-            break;
-
-        case(2):
-            turnRight();
-            break;
-
-        case(3):
-            driveStraight();
-            break;
-
-        case(4):
-            Serial.println("Fully obstructed");
-            // drive both backwards then turn left?
-            reverse();
-            delay(1000);
-            turnLeft();
-            delay(500);
-            break;
-    }
-}
 
 void turnLeft() {
     Serial.println("turning left");
@@ -73,4 +47,29 @@ void reverse() {
     Serial.println("reversing");
     right.writeMicroseconds(BACKWARD_SLOW);
     left.writeMicroseconds(BACKWARD_SLOW);
+}
+
+void motorControl(int IRVal) {
+    switch(IRVal) {
+        case(1):
+            turnLeft();
+            break;
+
+        case(2):
+            turnRight();
+            break;
+
+        case(3):
+            driveStraight();
+            break;
+
+        case(4):
+            Serial.println("Fully obstructed");
+            // drive both backwards then turn left?
+            reverse();
+            delay(1000);
+            turnLeft();
+            delay(500);
+            break;
+    }
 }

@@ -5,9 +5,12 @@
 #include "motorControl.h"
 #include "weightDetection.h"
 #include "robostruct.h"
+#include "pickup.h"
 
 #define WEIGHT_DETECTION_ANGULAR_TOLERANCE 50
 #define KNOCK_O_CLOCK 60000
+#define POLL_RATE 5
+#define DELAY 1000 / POLL_RATE
 
 int weightHeading;
 int IRResult;
@@ -33,7 +36,7 @@ void setup() {
 
 void loop() {
 
-    delay(10); // poll at 1kHz
+    delay(DELAY);
 
     if ((Robot.collectedWeights > Robot.weightGoal) || ((millis() - roundStartTime) >= KNOCK_O_CLOCK)) {
                     mode = 2; // RTB
@@ -61,7 +64,7 @@ void loop() {
 
             weightHeading = detectWeights(); // scan lower sensors to see if there is a weight present
             IRResult = detectObstacle(); // take input from IR reading function
-            //weightPresent = readProximity(); // check whether there is a weight in the pickup area
+            // weightPresent = readProximity(); // check whether there is a weight in the pickup area
 
             Robot.weightCollectTimeout++;
 
@@ -93,6 +96,7 @@ void loop() {
         case(2): // RETURNING TO BASE?
                 // have no idea how this will be achieved - do a 180, follow walls
                 // until we are over our colour?
+                Serial.println("returning to base");
             break;
 
     // motorControl(angleError, distanceError)

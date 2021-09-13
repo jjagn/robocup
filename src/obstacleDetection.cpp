@@ -15,12 +15,10 @@ static int IRLeftVal;
 static int RightProx = 200;
 static int LeftProx = 200;
 
-int mode = 0;
-
 int detectObstacle() {
     // takes sensor values from both IR sensors, outputs 1, 2, 3, or 4 for
     // obstacles right, left, all clear or fully obstructed respectively
-
+    int outputVal = 0;
     IRRightVal = readSensors(IRPinRight);
     IRLeftVal = readSensors(IRPPinLeft);
 
@@ -29,19 +27,19 @@ int detectObstacle() {
 
     if ((IRRightVal > RightProx) && (IRLeftVal < LeftProx)) {
         Serial.println("Obstacle right");
-        return 1;
+        outputVal = 1;
 
     } else if ((IRRightVal < RightProx) && (IRLeftVal > LeftProx)) {
         Serial.println("Obstacle left");
-        return 2;
+        outputVal = 2;
 
     } else if ((IRRightVal < RightProx) && (IRLeftVal < LeftProx)) {
         Serial.println("All clear");
-        return 3;
+        outputVal = 3;
 
     } else {
         Serial.println("Fully obstructed");
-        return 4;
-
+        outputVal = 4;
     }
+    return outputVal;
 }
