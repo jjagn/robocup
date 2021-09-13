@@ -4,25 +4,25 @@
 #define SENSOR_HEADING_TOLERANCE 10
 #define FILTER_PERIOD 10
 
-const int IRPinRight = A0; // lower IR sensor pin
-const int IRPinLeft = A1; // lower IR sensor pin
+const int WeightIRPinRight = A3; // lower IR sensor pin
+const int WeightIRPinLeft = A2; // lower IR sensor pin
 
-static int IRRightVal;
-static int IRLeftVal;
+static int WeightIRRightVal;
+static int WeightIRLeftVal;
 
 static int RightProx = 100;
-static int LeftProx = 200;
+static int LeftProx = 100;
 
 int detectWeights() {
     int weightHeading;
-    IRRightVal = readSensors(IRPinRight);
-    IRLeftVal = readSensors(IRPinLeft);
+    WeightIRRightVal = readSensors(WeightIRPinRight);
+    WeightIRLeftVal = readSensors(WeightIRPinLeft);
 
-    if (IRRightVal > RightProx && IRLeftVal > LeftProx) {
+    if (WeightIRRightVal > RightProx && WeightIRLeftVal > LeftProx) {
         // we have detected a weight, somewhere out there
-        weightHeading = IRRightVal - IRLeftVal;
+        weightHeading = WeightIRLeftVal - WeightIRRightVal;
     } else {
-        weightHeading = 9999;
+        weightHeading = 32767;
     }
     return weightHeading;
 }

@@ -20,31 +20,31 @@ void initMotors() {
 }
 
 void turnLeft() {
-    Serial.println("turning left");
+    // Serial.println("turning left");
     right.writeMicroseconds(FORWARD_SLOW);      // turn left 
     left.writeMicroseconds(BACKWARD_SLOW); 
 }
 
 void turnRight() {
-    Serial.println("turning right");
+    // Serial.println("turning right");
     right.writeMicroseconds(BACKWARD_SLOW);      // turn right
     left.writeMicroseconds(FORWARD_SLOW);  
 }
 
 void driveStraight() {
-    Serial.println("driving straight");
+    // Serial.println("driving straight");
     right.writeMicroseconds(FORWARD_FAST);
     left.writeMicroseconds(FORWARD_FAST);
 }
 
 void creep() {
-    Serial.println("creeping forward");
+    // Serial.println("creeping forward");
     right.writeMicroseconds(FORWARD_SLOW);
     left.writeMicroseconds(FORWARD_SLOW);
 }
 
 void reverse() {
-    Serial.println("reversing");
+    // Serial.println("reversing");
     right.writeMicroseconds(BACKWARD_SLOW);
     left.writeMicroseconds(BACKWARD_SLOW);
 }
@@ -64,7 +64,7 @@ void motorControl(int IRVal) {
             break;
 
         case(4):
-            Serial.println("Fully obstructed");
+            // Serial.println("Fully obstructed");
             // drive both backwards then turn left?
             reverse();
             delay(1000);

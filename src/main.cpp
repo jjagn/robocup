@@ -8,8 +8,8 @@
 #include "pickup.h"
 
 #define WEIGHT_DETECTION_ANGULAR_TOLERANCE 50
-#define KNOCK_O_CLOCK 60000
-#define POLL_RATE 5
+#define KNOCK_O_CLOCK 6000000
+#define POLL_RATE 100
 #define DELAY 1000 / POLL_RATE
 
 int weightHeading;
@@ -20,7 +20,6 @@ int weightCollectTimeOut = 0;
 unsigned long roundStartTime = 0;
 
 struct Robostruct Robot;
-
 
 void setup() {
     pinMode(49, OUTPUT);                 // Pin 49 is used to enable IO power
@@ -39,20 +38,20 @@ void loop() {
     delay(DELAY);
 
     if ((Robot.collectedWeights > Robot.weightGoal) || ((millis() - roundStartTime) >= KNOCK_O_CLOCK)) {
-                    mode = 2; // RTB
+                    Robot.mode = 2; // RTB
                 }
 
-    switch(mode) {
+    switch(Robot.mode) {
         case (0): // SEARCHING FOR WEIGHTS
             Serial.println("searching for weights, mode 1");
 
             weightHeading = detectWeights(); // scan lower sensors to see if there is a weight present
             IRResult = detectObstacle(); // take input from IR reading function
             
-            if (weightHeading == 9999) { // i.e. whatever output from detectWeights means there are no weights
-                mode = 0;
+            if (weightHeading == 32767) { // i.e. whatever output from detectWeights means there are no weights
+                Robot.mode = 0;
             } else {
-                mode = 1;
+                // Robot.mode = 1; // we got one
             }
 
             motorControl(IRResult); // control motors based on sensor output
@@ -63,8 +62,8 @@ void loop() {
             Serial.println("weights detected");
 
             weightHeading = detectWeights(); // scan lower sensors to see if there is a weight present
-            IRResult = detectObstacle(); // take input from IR reading function
-            // weightPresent = readProximity(); // check whether there is a weight in the pickup area
+            //IRResult = detectObstacle(); // take input from IR reading function
+            //weightPresent = readProximity(); // check whether there is a weight in the pickup area
 
             Robot.weightCollectTimeout++;
 
@@ -73,7 +72,6 @@ void loop() {
                 Robot.mode = 0;
                 Serial.println("aborting pickup");
             }
-
             // while weight is not in detection zone/if weight is not in detection zone
             // as long as the weight is not just a wall
             if (!weightPresent) {
