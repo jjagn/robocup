@@ -23,12 +23,11 @@ void pickup(void) {
     digitalWrite(dirPin, RAISE); // set stepper to direction, may need to be swapped
 
     moveStepper(NUM_PULSES);
-
+    // moveStepperToLimit(upperLimitSwitch);
     digitalWrite(dirPin, LOWER); // set stepper to opposite direction
 
     moveStepper(NUM_PULSES);
-
-    // maybe implement limit switches for ranging? 
+    // moveStepperToLimit(lowerLimitSwitch);
     
     
 }
