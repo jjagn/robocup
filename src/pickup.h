@@ -15,4 +15,8 @@ void moveStepper(int duration);
 
 void moveStepperToLimit(int limitSwitch);
 
+void enableMagnet(void);
+
+void disableMagnet(void);
+
 #endif

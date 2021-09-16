@@ -4,6 +4,7 @@
 #define NUM_PULSES 200
 #define RAISE 1
 #define LOWER 0
+#define TIMEOUT_LIMIT 1000
 
 const int electromagnetPin = 34;
 const int stepPin = 2;
@@ -27,24 +28,42 @@ void moveStepper(int duration) {
 }
 
 void moveStepperToLimit(int limitSwitch) {
-    while (digitalRead(limitSwitch) == 0) {
+    // man i hope this doesn't break stuff terribly
+    int timer = 0;
+    while (digitalRead(limitSwitch) == 0 && timer < TIMEOUT_LIMIT) {
         digitalWrite(stepPin, HIGH);
         delayMicroseconds(500);
         digitalWrite(stepPin, LOW);
         delayMicroseconds(500);
+        timer += 1;
     }
 }
 
-void pickup(void) {
+void enableMagnet(void) {
+    // for debugging at the moment but who knows?
     digitalWrite(electromagnetPin, 1);
+}
+
+void disableMagnet(void) {
+    // see above
+    digitalWrite(electromagnetPin, 0);
+}
+
+void pickup(void) {
+    // pick up weight
+    enableMagnet();
     delay(100);
+
     digitalWrite(dirPin, RAISE); // set stepper to direction, may need to be swapped
 
     moveStepper(200);
     // moveStepperToLimit(upperLimitSwitch);
+
     digitalWrite(dirPin, LOWER); // set stepper to opposite direction
+
+    // drop weight
+    disableMagnet();
 
     moveStepper(200);
     // moveStepperToLimit(lowerLimitSwitch);
-     
 }
