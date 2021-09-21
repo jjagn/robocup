@@ -19,4 +19,6 @@ void enableMagnet(void);
 
 void disableMagnet(void);
 
+void runStepper(void);
+
 #endif

@@ -6,10 +6,10 @@
 #define STOP 1500
 #define BACKWARD_SLOW 1200
 #define BACKWARD_FAST 1000
+#define ACCELERATION 10
 
 Servo right;      // create servo object to control a servo
 Servo left;      // create servo object to control a servo
-
 
 void initMotors() {
     right.attach(2);  // attaches the servo pin 3 to the servo object
