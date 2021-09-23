@@ -26,19 +26,19 @@ int detectObstacle() {
     // IRLeftVal = analogRead(IRPPinLeft);
 
     if ((IRRightVal > RightProx) && (IRLeftVal < LeftProx)) {
-        Serial.println("Obstacle right");
+        // Serial.println("Obstacle right");
         outputVal = 1;
 
     } else if ((IRRightVal < RightProx) && (IRLeftVal > LeftProx)) {
-        Serial.println("Obstacle left");
+        // Serial.println("Obstacle left");
         outputVal = 2;
 
     } else if ((IRRightVal < RightProx) && (IRLeftVal < LeftProx)) {
-        Serial.println("All clear");
+        // Serial.println("All clear");
         outputVal = 3;
 
     } else {
-        Serial.println("Fully obstructed");
+        // Serial.println("Fully obstructed");
         outputVal = 4;
     }
     return outputVal;

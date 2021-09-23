@@ -8,33 +8,35 @@
 #include "weightDetection.h"
 #include "robostruct.h"
 #include "pickup.h"
+#include "sensorStruct.h"
 
 #define WEIGHT_DETECTION_ANGULAR_TOLERANCE 50
 
-#define KNOCK_O_CLOCK 6000000
-
 #define TIMER_UPDATE_FREQ 1000
-#define TIMER_INTERRUPT_PERIOD 1000000 / SCAN_RATE_HZ
+#define TIMER_INTERRUPT_PERIOD 1000000 / TIMER_UPDATE_FREQ
 
 #define SCAN_RATE_HZ 10
 #define SCAN_PRESCALER TIMER_UPDATE_FREQ / SCAN_RATE_HZ
 
-#define POLL_RATE 100
-#define DELAY 1000 / POLL_RATE
+// #define POLL_RATE 100
+// #define DELAY 1000 / POLL_RATE
 
 int weightHeading;
 int IRResult;
-int mode = 0;
 bool weightPresent = false;
 int weightCollectTimeOut = 0;
-unsigned long roundStartTime = 0;
-
 volatile int scan = 0;
 volatile bool scanFlag = false;
 
 struct Robostruct Robot;
+struct Sensors sensors;
+struct sensors.Sensor rightObstacle = Sensor(A1);;
+struct Sensor leftObstacle = Sensor(A0);
+struct Sensor rightWeight = Sensor(A3);
+struct Sensor leftWeight = Sensor(A2);
 
 void TimerHandler() {
+    // Serial.println("timer handler triggered");
     if (++scan > SCAN_PRESCALER) {
         scanFlag = true;
         scan = 0;
@@ -44,24 +46,31 @@ void TimerHandler() {
 void setup() {
     pinMode(49, OUTPUT);                 // Pin 49 is used to enable IO power
     digitalWrite(49, 1);                 // Enable IO power on main CPU board
-    
+    Serial.begin(115200);
+
     // Init timer ITimer1
     Timer1.initialize(TIMER_INTERRUPT_PERIOD);
     Timer1.attachInterrupt(TimerHandler);
-
-    roundStartTime = millis();
 
     initMotors();
     initPickup();
 }
 
 void loop() {
+    Serial.println("looped");
     runStepper();
 
     if (scanFlag) {
-            scanFlag = false;
-            weightHeading = detectWeights(); // scan lower sensors to see if there is a weight present
-            IRResult = detectObstacle(); // take input from IR reading function
+        Serial.println("scanflag reset");
+        scanFlag = false;  
+
+        rightObstacle.averageSensor();
+        leftObstacle.averageSensor();
+        rightWeight.averageSensor();
+        leftWeight.averageSensor();
+
+        weightHeading = detectWeights(); // scan lower sensors to see if there is a weight present
+        IRResult = detectObstacle(); // take input from IR reading function
     }
 
     switch(Robot.mode) {
