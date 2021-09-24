@@ -35,33 +35,65 @@ struct Sensor {
 struct SensorGroup {
     static Sensor* right;
     static Sensor* left;
-
-    SensorGroup(Sensor* r, Sensor* l) {
-        right = r;
-        left = l;
-    }
-
     static int rightVal;
     static int leftVal;
-
-
+    static int output;
 };
 
 struct WeightSensors : public SensorGroup {
+
+        WeightSensors(Sensor* r, Sensor* l) {
+        right = r;
+        left = l;
+    }
+        
         int detectWeights() {
-            int weightHeading;
 
             leftVal = left->averaged;
             rightVal = right->averaged;
             
             if (rightVal > right->prox && leftVal > left->prox) {
                 // we have detected a weight, somewhere out there
-                weightHeading = leftVal - rightVal;
+                output = leftVal - rightVal;
             } else {
-                weightHeading = 32767;
+                output = 32767;
             }
-            return weightHeading;
+            return output;
         }
     };
+
+struct ObstacleSensors : public SensorGroup {
+
+    ObstacleSensors(Sensor* r, Sensor* l) {
+        right = r;
+        left = l;
+    }
+
+    int detectObstacle() {
+    // takes sensor values from both IR sensors, outputs 1, 2, 3, or 4 for
+    // obstacles right, left, all clear or fully obstructed respectively
+
+    rightVal = right->averaged;
+    leftVal = left->averaged;
+
+    if ((rightVal > right->prox) && (leftVal < left->prox)) {
+        // Serial.println("Obstacle right");
+        output = 1;
+
+    } else if ((rightVal < right->prox) && (leftVal > left->prox)) {
+        // Serial.println("Obstacle left");
+        output = 2;
+
+    } else if ((rightVal < right->prox) && (leftVal < left->prox)) {
+        // Serial.println("All clear");
+        output = 3;
+
+    } else {
+        // Serial.println("Fully obstructed");
+        output = 4;
+    }
+    return output;
+    }
+};
 
 #endif
