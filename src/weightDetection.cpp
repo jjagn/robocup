@@ -1,6 +1,8 @@
 #include <Arduino.h>
 #include "sensorRead.h"
 
+// DEPRECATED
+
 #define SENSOR_HEADING_TOLERANCE 10
 #define FILTER_PERIOD 10
 

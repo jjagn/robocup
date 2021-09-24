@@ -29,11 +29,13 @@ volatile int scan = 0;
 volatile bool scanFlag = false;
 
 struct Robostruct Robot;
-struct Sensors sensors;
-struct sensors.Sensor rightObstacle = Sensor(A1);;
-struct Sensor leftObstacle = Sensor(A0);
-struct Sensor rightWeight = Sensor(A3);
-struct Sensor leftWeight = Sensor(A2);
+struct Sensor rightObstacle = Sensor(A1, 200);;
+struct Sensor leftObstacle = Sensor(A0, 200);
+struct Sensor rightWeight = Sensor(A3, 100);
+struct Sensor leftWeight = Sensor(A2, 100);
+
+struct SensorGroup obstacleSensors = SensorGroup(&rightObstacle, &leftObstacle);
+struct WeightSensors weightSensors = SensorGroup(&rightWeight, &leftWeight);
 
 void TimerHandler() {
     // Serial.println("timer handler triggered");
@@ -64,6 +66,7 @@ void loop() {
         Serial.println("scanflag reset");
         scanFlag = false;  
 
+        // should read all sensors and update them
         rightObstacle.averageSensor();
         leftObstacle.averageSensor();
         rightWeight.averageSensor();
