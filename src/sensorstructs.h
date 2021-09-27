@@ -29,6 +29,7 @@ struct Sensor {
         index = (index+1) % BUFFER_SIZE;   // Increment the index, and wrap to 0 if it exceeds the window size
 
         averaged = sum / BUFFER_SIZE;      // Divide the sum of the window by the window size for the result
+        Serial.println(averaged);
     }
 };
 
