@@ -5,6 +5,12 @@
 
 #include <Arduino.h>
 
+// CABLES GO INTO CON 3 AND OUT OF CON 1 IF DAISY CHAINING
+// OA21 medium range
+// 42SK short range
+
+// this information has once again proven useful
+
 struct Sensor {
     // creates a sensor struct that holds all the relevant data about a sensor. create by calling Sensor(sensor pin, proximity value)
     int sensorPin;
