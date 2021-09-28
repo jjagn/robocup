@@ -20,22 +20,30 @@ struct Sensor {
     int sum = 0;
     int readings[BUFFER_SIZE];
     int averaged = 0;
+    String name;
 
-    Sensor(int sP, int p) {
+    Sensor(int sP, int p, String n) {
+        // constructor for sensor struct, also initialises sensor pin
         sensorPin = sP;
-        pinMode(sP, OUTPUT);
+        pinMode(sP, INPUT);
         prox = p;
+        name = n;
     }
 
     void averageSensor(void) {
         sum = sum - readings[index];       // Remove the oldest entry from the sum
         value = analogRead(sensorPin);
+        // THESE SERIAL PRINTS TAKE ~7 ms!!
+        // Serial.print("Sensor: ");
+        // Serial.println(name);
+        // Serial.print("Sensor value:");
+        // Serial.println(value);
         readings[index] = value;           // Add the newest reading to the window
         sum = sum + value;                 // Add the newest reading to the sum
         index = (index+1) % BUFFER_SIZE;   // Increment the index, and wrap to 0 if it exceeds the window size
 
         averaged = sum / BUFFER_SIZE;      // Divide the sum of the window by the window size for the result
-        Serial.println(averaged);
+        // Serial.println(averaged);
     }
 };
 

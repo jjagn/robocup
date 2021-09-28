@@ -13,21 +13,41 @@
 #define TIMER_UPDATE_FREQ 1000
 #define TIMER_INTERRUPT_PERIOD 1000000 / TIMER_UPDATE_FREQ
 
-#define SCAN_RATE_HZ 10
+#define SCAN_RATE_HZ 50
 #define SCAN_PRESCALER TIMER_UPDATE_FREQ / SCAN_RATE_HZ
+
+#define RIGHT_OBSTACLE_PIN A1
+#define LEFT_OBSTACLE_PIN A0
+#define RIGHT_WEIGHT_PIN A3
+#define LEFT_WEIGHT_PIN A2
 
 // g for global = g for good
 // declaring the many beautiful structs our program uses
 struct Robostruct Robot;
-struct Sensor rightObstacle = Sensor(A1, 200);
-struct Sensor leftObstacle = Sensor(A0, 200);
-struct Sensor rightWeight = Sensor(A3, 100);
-struct Sensor leftWeight = Sensor(A2, 100);
+struct Sensor rightObstacle = Sensor(RIGHT_OBSTACLE_PIN, 200, "right obstacle");
+struct Sensor leftObstacle = Sensor(LEFT_OBSTACLE_PIN, 200, "left obstacle");
+struct Sensor rightWeight = Sensor(RIGHT_WEIGHT_PIN, 100, "right weight");
+struct Sensor leftWeight = Sensor(LEFT_OBSTACLE_PIN, 100, "left weight");
 
 struct ObstacleSensors obstacleSensors = ObstacleSensors(&rightObstacle, &leftObstacle);
 struct WeightSensors weightSensors = WeightSensors(&rightWeight, &leftWeight);
 
 const int proximityPin = A5;
+
+// for debugging, timing/profiling
+unsigned long beforeTime = 0;
+unsigned long afterTime = 0;
+
+void startTimer() {
+    // for debug timing/profiling
+    beforeTime = millis();
+}
+
+void stopTimer() {
+    // for debug timing/profiling
+    afterTime = millis();
+    Serial.println(afterTime - beforeTime);
+}
 
 void TimerHandler() {
     // Serial.println("timer handler triggered");
@@ -51,8 +71,6 @@ void setup() {
     initPickup();
 
     pinMode(proximityPin, INPUT);
-
-    Robot.mode = 3; // DEBUG
 }
 
 void loop() {
@@ -64,11 +82,13 @@ void loop() {
 
     if (Robot.scanFlag) {
         // e.g. if timer interrupt has triggered and it's time to scan
-        Serial.println("scanflag reset");
+
+        // Serial.println("scanflag reset");
         Robot.scanFlag = false;  
 
         // should read all sensors and update them
         // I SINCERELY HOPE THIS IS FASTER THAN THE SENSOR UPDATE FREQUENCY
+        // looks like this block takes roughly 1 ms
         rightObstacle.averageSensor();
         leftObstacle.averageSensor();
         rightWeight.averageSensor();
@@ -76,6 +96,7 @@ void loop() {
 
         Robot.weightHeading = weightSensors.detectWeights(); // scan lower sensors to see if there is a weight present
         Robot.IRResult = obstacleSensors.detectObstacle(); // take input from IR reading function
+
     }
 
     switch(Robot.mode) {
