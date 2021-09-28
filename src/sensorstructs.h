@@ -40,16 +40,16 @@ struct Sensor {
 };
 
 struct SensorGroup {
-    static Sensor* right;
-    static Sensor* left;
-    static int rightVal;
-    static int leftVal;
-    static int output;
+    Sensor *right;
+    Sensor *left;
+    int rightVal;
+    int leftVal;
+    int output;
 };
 
 struct WeightSensors : public SensorGroup {
 
-        WeightSensors(Sensor* r, Sensor* l) {
+        WeightSensors(Sensor *r, Sensor *l) {
         right = r;
         left = l;
     }

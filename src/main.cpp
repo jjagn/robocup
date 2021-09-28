@@ -19,13 +19,15 @@
 // g for global = g for good
 // declaring the many beautiful structs our program uses
 struct Robostruct Robot;
-struct Sensor rightObstacle = Sensor(A1, 200);;
+struct Sensor rightObstacle = Sensor(A1, 200);
 struct Sensor leftObstacle = Sensor(A0, 200);
 struct Sensor rightWeight = Sensor(A3, 100);
 struct Sensor leftWeight = Sensor(A2, 100);
 
 struct ObstacleSensors obstacleSensors = ObstacleSensors(&rightObstacle, &leftObstacle);
 struct WeightSensors weightSensors = WeightSensors(&rightWeight, &leftWeight);
+
+const int proximityPin = A5;
 
 void TimerHandler() {
     // Serial.println("timer handler triggered");
@@ -47,10 +49,14 @@ void setup() {
     // initialise motors and pickup mechanism, mainly just setting pins to output and shit
     initMotors();
     initPickup();
+
+    pinMode(proximityPin, INPUT);
+
+    Robot.mode = 3; // DEBUG
 }
 
 void loop() {
-    Serial.println("looped");
+    // Serial.println("looped");
 
     // this function updates the current position of the stepper motor, 
     // calculates what it needs to do and where it needs to go
@@ -85,7 +91,7 @@ void loop() {
             break;
         
         case(1): // WEIGHT DETECTED, MOVING TO PICKUP
-            //weightPresent = readProximity(); // check whether there is a weight in the pickup area
+            Robot.weightPresent = digitalRead(proximityPin); // check whether there is a weight in the pickup area
 
             Robot.weightCollectTimeout++;
 
@@ -112,5 +118,8 @@ void loop() {
 
 
                 break;
+        case(3): //DEBUG MODE
+        Serial.println(digitalRead(proximityPin));
+        enableMagnet();
     }
 }

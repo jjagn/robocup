@@ -11,7 +11,6 @@ typedef struct Robostruct {
 
     int weightHeading;
     int IRResult;
-    bool weightPresent = false;
     int weightCollectTimeOut = 0;
     volatile int scan = 0;
     volatile bool scanFlag = false;
