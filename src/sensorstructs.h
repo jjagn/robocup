@@ -34,16 +34,16 @@ struct Sensor {
         sum = sum - readings[index];       // Remove the oldest entry from the sum
         value = analogRead(sensorPin);
         // THESE SERIAL PRINTS TAKE ~7 ms!!
-        // Serial.print("Sensor: ");
-        // Serial.println(name);
-        // Serial.print("Sensor value:");
-        // Serial.println(value);
+        // debug("Sensor: ");
+        // debugln(name);
+        // debug("Sensor value:");
+        // debugln(value);
         readings[index] = value;           // Add the newest reading to the window
         sum = sum + value;                 // Add the newest reading to the sum
         index = (index+1) % BUFFER_SIZE;   // Increment the index, and wrap to 0 if it exceeds the window size
 
         averaged = sum / BUFFER_SIZE;      // Divide the sum of the window by the window size for the result
-        // Serial.println(averaged);
+        // debugln(averaged);
     }
 };
 
@@ -92,19 +92,19 @@ struct ObstacleSensors : public SensorGroup {
     leftVal = left->averaged;
 
     if ((rightVal > right->prox) && (leftVal < left->prox)) {
-        // Serial.println("Obstacle right");
+        // debugln("Obstacle right");
         output = 1;
 
     } else if ((rightVal < right->prox) && (leftVal > left->prox)) {
-        // Serial.println("Obstacle left");
+        // debugln("Obstacle left");
         output = 2;
 
     } else if ((rightVal < right->prox) && (leftVal < left->prox)) {
-        // Serial.println("All clear");
+        // debugln("All clear");
         output = 3;
 
     } else {
-        // Serial.println("Fully obstructed");
+        // debugln("Fully obstructed");
         output = 4;
     }
     return output;

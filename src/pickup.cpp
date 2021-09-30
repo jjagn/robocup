@@ -21,7 +21,7 @@ void initPickup(void) {
     pinMode(electromagnetPin, OUTPUT);
     pinMode(stepPin, OUTPUT);
     pinMode(dirPin, OUTPUT);
-    stepper.setMaxSpeed(1500);
+    stepper.setMaxSpeed(1000);
     stepper.setAcceleration(2000);
 }
 
@@ -51,20 +51,24 @@ void disableMagnet(void) {
     digitalWrite(electromagnetPin, 0);
 }
 
-void pickup(void) {
+void pickup(int* state) {
     // pick up weight
-    enableMagnet();
-
-    digitalWrite(dirPin, RAISE); // set stepper to direction, may need to be swapped
-
-    moveStepper(200);
-    // moveStepperToLimit(upperLimitSwitch);
-
-    digitalWrite(dirPin, LOWER); // set stepper to opposite direction
-
-    // drop weight
-    disableMagnet();
-
-    moveStepper(200);
-    // moveStepperToLimit(lowerLimitSwitch);
+    if (*state == 0) {
+        moveStepper(100);
+        *state = 1;
+    } else if (*state == 1) {
+        if (digitalRead(A5) == 1) {
+            *state = 2;
+        }
+    } else if (*state == 2) {
+        enableMagnet();
+        moveStepper(-2000);
+        *state = 3;
+    } else if (*state == 3) {
+        if (stepper.currentPosition() == -2000) {
+            *state = 4;
+        }
+    } else if (*state == 4) {
+        disableMagnet();
+    }
 }

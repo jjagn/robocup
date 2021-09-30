@@ -7,6 +7,7 @@
 #include "robostruct.h"
 #include "pickup.h"
 #include "sensorstructs.h"
+#include "debug.h"
 
 #define WEIGHT_DETECTION_ANGULAR_TOLERANCE 50
 
@@ -37,6 +38,7 @@ const int proximityPin = A5;
 // for debugging, timing/profiling
 unsigned long beforeTime = 0;
 unsigned long afterTime = 0;
+int state = 0;
 
 void startTimer() {
     // for debug timing/profiling
@@ -46,11 +48,11 @@ void startTimer() {
 void stopTimer() {
     // for debug timing/profiling
     afterTime = millis();
-    Serial.println(afterTime - beforeTime);
+    debugln(afterTime - beforeTime);
 }
 
 void TimerHandler() {
-    // Serial.println("timer handler triggered");
+    // debugln("timer handler triggered");
     if (++Robot.scan > SCAN_PRESCALER) {
         Robot.scanFlag = true;
         Robot.scan = 0;
@@ -60,7 +62,7 @@ void TimerHandler() {
 void setup() {
     pinMode(49, OUTPUT);                 // Pin 49 is used to enable IO power
     digitalWrite(49, 1);                 // Enable IO power on main CPU board
-    Serial.begin(115200);
+    initSerial();
 
     // Initialise timer ITimer1
     Timer1.initialize(TIMER_INTERRUPT_PERIOD);
@@ -71,10 +73,12 @@ void setup() {
     initPickup();
 
     pinMode(proximityPin, INPUT);
+
+    Robot.mode = 3;
 }
 
 void loop() {
-    // Serial.println("looped");
+    // debugln("looped");
 
     // this function updates the current position of the stepper motor, 
     // calculates what it needs to do and where it needs to go
@@ -83,7 +87,7 @@ void loop() {
     if (Robot.scanFlag) {
         // e.g. if timer interrupt has triggered and it's time to scan
 
-        // Serial.println("scanflag reset");
+        // debugln("scanflag reset");
         Robot.scanFlag = false;  
 
         // should read all sensors and update them
@@ -104,7 +108,7 @@ void loop() {
             if (Robot.weightHeading == 32767) { // i.e. whatever output from detectWeights means there are no weights
                 Robot.mode = 0;
             } else {
-                Robot.mode = 1; // we got one
+                // Robot.mode = 1; // we got one
             }
 
             motorControl(Robot.IRResult); // control motors based on sensor output
@@ -119,7 +123,7 @@ void loop() {
             if (Robot.weightCollectTimeout > Robot.weightCollectTimeoutLimit) {
                 Robot.resetTimeout();
                 Robot.mode = 0;
-                // Serial.println("aborting pickup");
+                // debugln("aborting pickup");
             }
             // while weight is not in detection zone/if weight is not in detection zone
             // as long as the weight is not just a wall
@@ -132,7 +136,7 @@ void loop() {
                     creep();
                 }
             } else {
-                pickup(); // this function should turn on the magnet, lift it, drop the weight into the bin, and return the magnet to zero
+                // pickup(); // this function should turn on the magnet, lift it, drop the weight into the bin, and return the magnet to zero
                 Robot.mode = 0;
                 Robot.collectedWeights++;
             }
@@ -140,7 +144,7 @@ void loop() {
 
                 break;
         case(3): //DEBUG MODE
-        Serial.println(digitalRead(proximityPin));
-        enableMagnet();
+        pickup(&state);
+        debugln(state);
     }
 }

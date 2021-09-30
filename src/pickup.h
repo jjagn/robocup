@@ -9,7 +9,7 @@
 
 void initPickup(void);
 
-void pickup(void);
+void pickup(int* state);
 
 void moveStepper(int duration);
 
