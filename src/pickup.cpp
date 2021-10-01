@@ -41,6 +41,13 @@ void moveStepperToLimit(int limitSwitch) {
     }
 }
 
+void cycle() {
+    if (stepper.currentPosition() <= 0)
+        stepper.moveTo(5000);
+    else if (stepper.currentPosition() >= 5000)
+        stepper.moveTo(0);
+}
+
 void enableMagnet(void) {
     // for debugging at the moment but who knows?
     digitalWrite(electromagnetPin, 1);

@@ -48,11 +48,11 @@ void startTimer() {
 void stopTimer() {
     // for debug timing/profiling
     afterTime = millis();
-    debugln(afterTime - beforeTime);
+    Serial.println(afterTime - beforeTime);
 }
 
 void TimerHandler() {
-    // debugln("timer handler triggered");
+    //debugln("timer handler triggered");
     if (++Robot.scan > SCAN_PRESCALER) {
         Robot.scanFlag = true;
         Robot.scan = 0;
@@ -73,8 +73,6 @@ void setup() {
     initPickup();
 
     pinMode(proximityPin, INPUT);
-
-    Robot.mode = 3;
 }
 
 void loop() {
@@ -94,9 +92,9 @@ void loop() {
         // I SINCERELY HOPE THIS IS FASTER THAN THE SENSOR UPDATE FREQUENCY
         // looks like this block takes roughly 1 ms
         rightObstacle.averageSensor();
-        leftObstacle.averageSensor();
-        rightWeight.averageSensor();
-        leftWeight.averageSensor();
+        // leftObstacle.averageSensor();
+        // rightWeight.averageSensor();
+        // leftWeight.averageSensor();
 
         Robot.weightHeading = weightSensors.detectWeights(); // scan lower sensors to see if there is a weight present
         Robot.IRResult = obstacleSensors.detectObstacle(); // take input from IR reading function
@@ -144,7 +142,6 @@ void loop() {
 
                 break;
         case(3): //DEBUG MODE
-        pickup(&state);
-        debugln(state);
+        cycle();
     }
 }

@@ -4,6 +4,7 @@
 #define BUFFER_SIZE 5
 
 #include <Arduino.h>
+#include "debug.h"
 
 // CABLES GO INTO CON 3 AND OUT OF CON 1 IF DAISY CHAINING
 // OA21 medium range
@@ -37,13 +38,16 @@ struct Sensor {
         // debug("Sensor: ");
         // debugln(name);
         // debug("Sensor value:");
-        // debugln(value);
+        debug("raw:");
+        debug(value);
+        debug(",");
         readings[index] = value;           // Add the newest reading to the window
         sum = sum + value;                 // Add the newest reading to the sum
         index = (index+1) % BUFFER_SIZE;   // Increment the index, and wrap to 0 if it exceeds the window size
 
         averaged = sum / BUFFER_SIZE;      // Divide the sum of the window by the window size for the result
-        // debugln(averaged);
+        debug("filtered:");
+        debugln(averaged);
     }
 };
 
