@@ -34,6 +34,7 @@ struct ObstacleSensors obstacleSensors = ObstacleSensors(&rightObstacle, &leftOb
 struct WeightSensors weightSensors = WeightSensors(&rightWeight, &leftWeight);
 
 const int proximityPin = A5;
+const int weightBayMicro = A5;
 
 // for debugging, timing/profiling
 unsigned long beforeTime = 0;
@@ -73,6 +74,9 @@ void setup() {
     initPickup();
 
     pinMode(proximityPin, INPUT);
+
+    // Robot.mode = 3; // being boot sequence by zeroing pickup carriage
+    Robot.mode = 100; // set robot to debug mode
 }
 
 void loop() {
@@ -85,16 +89,16 @@ void loop() {
     if (Robot.scanFlag) {
         // e.g. if timer interrupt has triggered and it's time to scan
 
-        // debugln("scanflag reset");
+        debugln("scanflag reset");
         Robot.scanFlag = false;  
 
         // should read all sensors and update them
         // I SINCERELY HOPE THIS IS FASTER THAN THE SENSOR UPDATE FREQUENCY
         // looks like this block takes roughly 1 ms
         rightObstacle.averageSensor();
-        // leftObstacle.averageSensor();
-        // rightWeight.averageSensor();
-        // leftWeight.averageSensor();
+        leftObstacle.averageSensor();
+        rightWeight.averageSensor();
+        leftWeight.averageSensor();
 
         Robot.weightHeading = weightSensors.detectWeights(); // scan lower sensors to see if there is a weight present
         Robot.IRResult = obstacleSensors.detectObstacle(); // take input from IR reading function
@@ -102,30 +106,25 @@ void loop() {
     }
 
     switch(Robot.mode) {
-        case (0): // SEARCHING FOR WEIGHTS
+        case 0: // SEARCHING FOR WEIGHTS
             if (Robot.weightHeading == 32767) { // i.e. whatever output from detectWeights means there are no weights
                 Robot.mode = 0;
             } else {
-                // Robot.mode = 1; // we got one
+                Robot.mode = 1; // we got one
             }
 
             motorControl(Robot.IRResult); // control motors based on sensor output
 
             break;
         
-        case(1): // WEIGHT DETECTED, MOVING TO PICKUP
-            Robot.weightPresent = digitalRead(proximityPin); // check whether there is a weight in the pickup area
+        case 1: // WEIGHT DETECTED, MOVING TO PICKUP
+            Robot.weightPresent = digitalRead(weightBayMicro); // check whether there is a weight in the pickup area
 
-            Robot.weightCollectTimeout++;
+            Robot.CheckTimeout();
 
-            if (Robot.weightCollectTimeout > Robot.weightCollectTimeoutLimit) {
-                Robot.resetTimeout();
-                Robot.mode = 0;
-                // debugln("aborting pickup");
-            }
             // while weight is not in detection zone/if weight is not in detection zone
             // as long as the weight is not just a wall
-            if (!Robot.weightPresent) {
+            if (Robot.weightPresent == 0) {
                 if (Robot.weightHeading > WEIGHT_DETECTION_ANGULAR_TOLERANCE) {
                     turnRight();
                 } else if (Robot.weightHeading < -WEIGHT_DETECTION_ANGULAR_TOLERANCE) {
@@ -134,14 +133,27 @@ void loop() {
                     creep();
                 }
             } else {
-                // pickup(); // this function should turn on the magnet, lift it, drop the weight into the bin, and return the magnet to zero
-                Robot.mode = 0;
-                Robot.collectedWeights++;
+                Robot.mode = 2; // enter pickup mode
             }
+            break;
 
+        case 2: // PICKING UP WEIGHT
+            Robot.CheckTimeout();
+            if(Robot.pickupState == 5) { // weight pickup complete
+                Robot.mode = 0;
+            } else {
+                pickup(&Robot.pickupState); // continue pickup fsm
+            }
+            break;
 
-                break;
-        case(3): //DEBUG MODE
-        cycle();
+        case 3: // zeroing 
+            if (zero(&Robot.zeroState)) {
+                Robot.mode = 0; // begin the hunt
+            }
+            break;
+
+        case 100: //DEBUG MODE
+            debugln(digitalRead(38));
+            break;
     }
 }

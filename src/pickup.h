@@ -23,4 +23,6 @@ void runStepper(void);
 
 void cycle(void);
 
+bool zero(int* state);
+
 #endif

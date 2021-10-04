@@ -12,8 +12,12 @@
 const int electromagnetPin = 34;
 const int stepPin = 42;
 const int dirPin = 43;
-const int upperLimitSwitch = 0;
-const int lowerLimitSwitch = 0;
+// const int upperLimitSwitch = 0; // Deprecated probably
+const int lowerLimitSwitch = 38;
+const int inductiveProx = A5;
+const int carriageContactSwitch = 39;
+
+// NOTE: LIMIT SWITCHES ARE ACTIVE LOW
 
 AccelStepper stepper(AccelStepper::DRIVER, stepPin, dirPin);
 
@@ -60,22 +64,79 @@ void disableMagnet(void) {
 
 void pickup(int* state) {
     // pick up weight
-    if (*state == 0) {
-        moveStepper(100);
+    // TODO: NEEDS TO BE REWRITTEN TO ADD THE LOGIC FOR THE CONTACT SWITCH
+
+    switch (*state)
+    {
+    case 0:
+        moveStepper(1000);
         *state = 1;
-    } else if (*state == 1) {
-        if (digitalRead(A5) == 1) {
+        break;
+    case 1:
+        if (digitalRead(inductiveProx) == 1) {
             *state = 2;
         }
-    } else if (*state == 2) {
+        break;
+    case 2:
         enableMagnet();
         moveStepper(-2000);
         *state = 3;
-    } else if (*state == 3) {
+        break;
+    case 3:
         if (stepper.currentPosition() == -2000) {
             *state = 4;
         }
-    } else if (*state == 4) {
+        break;
+    case 4:
         disableMagnet();
+        *state = 5;
+        break;
+    case 5: // completed
+        break;
     }
+}
+
+bool zero(int* state) {
+    // place stepper right next to bottom limit switch or else this will not work
+    bool zeroed = false;
+    stepper.setMaxSpeed(500);
+
+    switch (*state)
+    {
+    case 0: 
+        // try moving in first direction - N.B. if this initial direction is
+        // right then the rest should work fine without requiring rewrite
+
+        moveStepper(1000);
+        *state = 1;
+        break;
+    case 1: //
+        if (digitalRead(lowerLimitSwitch) == 1) {
+            if (stepper.currentPosition() == 1000) {
+                stepper.moveTo(-1000);
+                *state = 2; // try moving the other way?
+            }
+        } else {
+            // zeroed successfully
+            stepper.stop();
+            stepper.setCurrentPosition(0);
+            stepper.setMaxSpeed(1000);
+            zeroed = true;
+        }
+        break;
+
+    case 2:
+        if (digitalRead(lowerLimitSwitch) == 1) {
+            if (stepper.currentPosition() == -1000)
+                *state = 3; // zero has failed
+        } else {
+            // zeroed successfully
+            stepper.stop();
+            stepper.setCurrentPosition(0);
+            stepper.setMaxSpeed(1000);
+            zeroed = true;
+        }
+        break;
+    }
+    return zeroed;
 }
