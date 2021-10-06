@@ -1,6 +1,7 @@
 // pickup.c - module for controlling weight pickup;
 #include <Arduino.h>
 #include <AccelStepper.h>
+#include "debug.h"
 
 #define NUM_PULSES 200
 #define RAISE 1
@@ -12,7 +13,6 @@
 const int electromagnetPin = 34;
 const int stepPin = 42;
 const int dirPin = 43;
-// const int upperLimitSwitch = 0; // Deprecated probably
 const int lowerLimitSwitch = 38;
 const int inductiveProx = A5;
 const int carriageContactSwitch = 39;
@@ -112,14 +112,18 @@ bool zero(int* state) {
         break;
     case 1: //
         if (digitalRead(lowerLimitSwitch) == 1) {
+            debugln("limit switch not detected");
             if (stepper.currentPosition() == 1000) {
+                debugln("trying other direction");
                 stepper.moveTo(-1000);
                 *state = 2; // try moving the other way?
             }
         } else {
             // zeroed successfully
+            debugln("zeroed successfully");
             stepper.stop();
             stepper.setCurrentPosition(0);
+            stepper.moveTo(0);
             stepper.setMaxSpeed(1000);
             zeroed = true;
         }
@@ -128,8 +132,10 @@ bool zero(int* state) {
     case 2:
         if (digitalRead(lowerLimitSwitch) == 1) {
             if (stepper.currentPosition() == -1000)
+            debugln("failed to zero");
                 *state = 3; // zero has failed
         } else {
+            debugln("zeroed successfully on second try");
             // zeroed successfully
             stepper.stop();
             stepper.setCurrentPosition(0);

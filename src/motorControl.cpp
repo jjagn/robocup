@@ -1,5 +1,7 @@
 #include <Arduino.h>
 #include <Servo.h>
+#include "debug.h"
+#include "robostruct.h"
 
 #define FORWARD_FAST 2000
 #define FORWARD_SLOW 1800
@@ -20,31 +22,31 @@ void initMotors() {
 }
 
 void turnLeft() {
-    // debugln("turning left");
+    debugln("turning left");
     right.writeMicroseconds(FORWARD_SLOW);      // turn left 
     left.writeMicroseconds(BACKWARD_SLOW); 
 }
 
 void turnRight() {
-    // debugln("turning right");
+    debugln("turning right");
     right.writeMicroseconds(BACKWARD_SLOW);      // turn right
     left.writeMicroseconds(FORWARD_SLOW);  
 }
 
 void driveStraight() {
-    // debugln("driving straight");
+    debugln("driving straight");
     right.writeMicroseconds(FORWARD_FAST);
     left.writeMicroseconds(FORWARD_FAST);
 }
 
 void creep() {
-    // debugln("creeping forward");
+    debugln("creeping forward");
     right.writeMicroseconds(FORWARD_SLOW);
     left.writeMicroseconds(FORWARD_SLOW);
 }
 
 void reverse() {
-    // debugln("reversing");
+    debugln("reversing");
     right.writeMicroseconds(BACKWARD_SLOW);
     left.writeMicroseconds(BACKWARD_SLOW);
 }
@@ -69,7 +71,7 @@ void motorControl(int IRVal) {
             reverse();
             delay(1000);
             turnLeft();
-            delay(500);
+            delay(1000);
             break;
     }
 }

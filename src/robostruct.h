@@ -7,7 +7,7 @@ typedef struct Robostruct {
     int mode = 0;
     bool weightPresent = false;
     int weightCollectTimeout = 0;
-    int weightCollectTimeoutLimit = 1000;
+    int weightCollectTimeoutLimit = 100;
     int collectedWeights = 0;
     int weightGoal = 3;
     int zeroState = 0;
@@ -23,9 +23,9 @@ typedef struct Robostruct {
     }
 
     void CheckTimeout() {
-    if (++this->weightCollectTimeout > this->weightCollectTimeoutLimit) {
-                this->resetTimeout();
-                this->mode = 0;
+    if (++weightCollectTimeout > weightCollectTimeoutLimit) {
+                resetTimeout();
+                mode = 0;
                 debugln("aborting pickup");
             }
 }

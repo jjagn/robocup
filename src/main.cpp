@@ -17,16 +17,16 @@
 #define SCAN_RATE_HZ 50
 #define SCAN_PRESCALER TIMER_UPDATE_FREQ / SCAN_RATE_HZ
 
-#define RIGHT_OBSTACLE_PIN A1
-#define LEFT_OBSTACLE_PIN A0
+#define RIGHT_OBSTACLE_PIN A0
+#define LEFT_OBSTACLE_PIN A1
 #define RIGHT_WEIGHT_PIN A3
 #define LEFT_WEIGHT_PIN A2
 
 // g for global = g for good
 // declaring the many beautiful structs our program uses
 struct Robostruct Robot;
-struct Sensor rightObstacle = Sensor(RIGHT_OBSTACLE_PIN, 200, "right obstacle");
-struct Sensor leftObstacle = Sensor(LEFT_OBSTACLE_PIN, 200, "left obstacle");
+struct Sensor rightObstacle = Sensor(RIGHT_OBSTACLE_PIN, 100, "right obstacle");
+struct Sensor leftObstacle = Sensor(LEFT_OBSTACLE_PIN, 100, "left obstacle");
 struct Sensor rightWeight = Sensor(RIGHT_WEIGHT_PIN, 100, "right weight");
 struct Sensor leftWeight = Sensor(LEFT_OBSTACLE_PIN, 100, "left weight");
 
@@ -34,7 +34,7 @@ struct ObstacleSensors obstacleSensors = ObstacleSensors(&rightObstacle, &leftOb
 struct WeightSensors weightSensors = WeightSensors(&rightWeight, &leftWeight);
 
 const int proximityPin = A5;
-const int weightBayMicro = A5;
+const int weightBayMicro = 41;
 
 // for debugging, timing/profiling
 unsigned long beforeTime = 0;
@@ -76,7 +76,7 @@ void setup() {
     pinMode(proximityPin, INPUT);
 
     // Robot.mode = 3; // being boot sequence by zeroing pickup carriage
-    Robot.mode = 100; // set robot to debug mode
+    Robot.mode = 0; // set robot to debug mode
 }
 
 void loop() {
@@ -85,11 +85,10 @@ void loop() {
     // this function updates the current position of the stepper motor, 
     // calculates what it needs to do and where it needs to go
     runStepper();
-
     if (Robot.scanFlag) {
         // e.g. if timer interrupt has triggered and it's time to scan
 
-        debugln("scanflag reset");
+        // debugln("scanflag reset");
         Robot.scanFlag = false;  
 
         // should read all sensors and update them
@@ -102,15 +101,19 @@ void loop() {
 
         Robot.weightHeading = weightSensors.detectWeights(); // scan lower sensors to see if there is a weight present
         Robot.IRResult = obstacleSensors.detectObstacle(); // take input from IR reading function
-
+        debug("weight heading: ");
+        debugln(Robot.weightHeading);
+        debug("IR result: ");
+        debugln(Robot.IRResult);
     }
 
     switch(Robot.mode) {
         case 0: // SEARCHING FOR WEIGHTS
+            debugln("searching for weights");
             if (Robot.weightHeading == 32767) { // i.e. whatever output from detectWeights means there are no weights
                 Robot.mode = 0;
             } else {
-                Robot.mode = 1; // we got one
+                // Robot.mode = 1; // we got one
             }
 
             motorControl(Robot.IRResult); // control motors based on sensor output
@@ -118,26 +121,33 @@ void loop() {
             break;
         
         case 1: // WEIGHT DETECTED, MOVING TO PICKUP
+            debugln("weight detected");
             Robot.weightPresent = digitalRead(weightBayMicro); // check whether there is a weight in the pickup area
 
             Robot.CheckTimeout();
 
             // while weight is not in detection zone/if weight is not in detection zone
             // as long as the weight is not just a wall
-            if (Robot.weightPresent == 0) {
+            if (Robot.weightPresent == 1) {
+                debugln("no weight in weight bay");
                 if (Robot.weightHeading > WEIGHT_DETECTION_ANGULAR_TOLERANCE) {
+                    debugln("weight is right, turning right");
                     turnRight();
                 } else if (Robot.weightHeading < -WEIGHT_DETECTION_ANGULAR_TOLERANCE) {
+                    debugln("weight is left, turning left");
                     turnLeft();
                 } else {
+                    debugln("weight is directly ahead, creeping forward");
                     creep();
                 }
             } else {
+                debugln("weight detected in pickup bay");
                 Robot.mode = 2; // enter pickup mode
             }
             break;
 
         case 2: // PICKING UP WEIGHT
+            debugln("picking up weight");
             Robot.CheckTimeout();
             if(Robot.pickupState == 5) { // weight pickup complete
                 Robot.mode = 0;
@@ -148,12 +158,19 @@ void loop() {
 
         case 3: // zeroing 
             if (zero(&Robot.zeroState)) {
+                debugln("zero completed");
                 Robot.mode = 0; // begin the hunt
             }
             break;
 
         case 100: //DEBUG MODE
-            debugln(digitalRead(38));
+            rightObstacle.averageSensor();
+            debug("Right obstacle");
+            debugln(rightObstacle.averaged);
+            leftObstacle.averageSensor();
+            debug("Left obstacle");
+            debugln(leftObstacle.averaged);
+            delay(50);
             break;
     }
 }
