@@ -75,8 +75,8 @@ void setup() {
 
     pinMode(proximityPin, INPUT);
 
-    // Robot.mode = 3; // being boot sequence by zeroing pickup carriage
-    Robot.mode = 0; // set robot to debug mode
+    Robot.mode = 3; // being boot sequence by zeroing pickup carriage
+    // Robot.mode = 0; // set robot to debug mode
 }
 
 void loop() {
@@ -101,10 +101,6 @@ void loop() {
 
         Robot.weightHeading = weightSensors.detectWeights(); // scan lower sensors to see if there is a weight present
         Robot.IRResult = obstacleSensors.detectObstacle(); // take input from IR reading function
-        debug("weight heading: ");
-        debugln(Robot.weightHeading);
-        debug("IR result: ");
-        debugln(Robot.IRResult);
     }
 
     switch(Robot.mode) {
@@ -112,8 +108,8 @@ void loop() {
             debugln("searching for weights");
             if (Robot.weightHeading == 32767) { // i.e. whatever output from detectWeights means there are no weights
                 Robot.mode = 0;
-            } else {
-                // Robot.mode = 1; // we got one
+            } else if (digitalRead(weightBayMicro) == 0) {
+                Robot.mode = 1; // we got one
             }
 
             motorControl(Robot.IRResult); // control motors based on sensor output
@@ -123,7 +119,7 @@ void loop() {
         case 1: // WEIGHT DETECTED, MOVING TO PICKUP
             debugln("weight detected");
             Robot.weightPresent = digitalRead(weightBayMicro); // check whether there is a weight in the pickup area
-
+            smartControl(1500, 1500);
             Robot.CheckTimeout();
 
             // while weight is not in detection zone/if weight is not in detection zone
@@ -151,6 +147,8 @@ void loop() {
             Robot.CheckTimeout();
             if(Robot.pickupState == 5) { // weight pickup complete
                 Robot.mode = 0;
+            } else if (Robot.pickupState == 10) { // dummy weight
+                Robot.mode = 5;
             } else {
                 pickup(&Robot.pickupState); // continue pickup fsm
             }
@@ -160,6 +158,18 @@ void loop() {
             if (zero(&Robot.zeroState)) {
                 debugln("zero completed");
                 Robot.mode = 0; // begin the hunt
+            }
+            break;
+
+        case 5: //aborting pickup
+            if (++Robot.abortTimer1 <= Robot.abortLimit1) { // reverse for a bit
+                reverse();
+            } else if (++Robot.abortTimer2 <= Robot.abortLimit2) { // turn for a bit
+                turnLeft();
+            } else { // return to hunting for weights
+                Robot.abortTimer1 = 0;
+                Robot.abortTimer2 = 0;
+                Robot.mode = 0;
             }
             break;
 

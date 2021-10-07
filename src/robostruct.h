@@ -12,19 +12,19 @@ typedef struct Robostruct {
     int weightGoal = 3;
     int zeroState = 0;
     int pickupState = 0;
+    int abortTimer1 = 0;
+    int abortTimer2 = 0;
+    int abortLimit1 = 100;
+    int abortLimit2 = 100;
 
     int weightHeading;
     int IRResult;
     volatile int scan = 0;
     volatile bool scanFlag = false;
 
-    void resetTimeout(void) {
-        weightCollectTimeout = 0;
-    }
-
     void CheckTimeout() {
     if (++weightCollectTimeout > weightCollectTimeoutLimit) {
-                resetTimeout();
+                weightCollectTimeout = 0;
                 mode = 0;
                 debugln("aborting pickup");
             }

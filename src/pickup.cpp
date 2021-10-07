@@ -73,8 +73,10 @@ void pickup(int* state) {
         *state = 1;
         break;
     case 1:
-        if (digitalRead(inductiveProx) == 1) {
-            *state = 2;
+        if (digitalRead(inductiveProx) == 1 && digitalRead(carriageContactSwitch) == 0) {
+            *state = 2; // weight detected, ready to pick up
+        } else if (digitalRead(inductiveProx) == 0 && digitalRead(carriageContactSwitch) == 0) {
+            *state = 10; // dummy weight/obstacle detected
         }
         break;
     case 2:
@@ -93,13 +95,21 @@ void pickup(int* state) {
         break;
     case 5: // completed
         break;
+    
+    default:
+        break; 
     }
 }
 
 bool zero(int* state) {
     // place stepper right next to bottom limit switch or else this will not work
-    bool zeroed = false;
+    static bool zeroed = false;
+    static bool initial = true;
+
+    if (initial) {
     stepper.setMaxSpeed(500);
+    initial = false;
+    }
 
     switch (*state)
     {
@@ -113,7 +123,7 @@ bool zero(int* state) {
     case 1: //
         if (digitalRead(lowerLimitSwitch) == 1) {
             debugln("limit switch not detected");
-            if (stepper.currentPosition() == 1000) {
+            if (stepper.currentPosition() >= 1000) {
                 debugln("trying other direction");
                 stepper.moveTo(-1000);
                 *state = 2; // try moving the other way?
@@ -123,7 +133,6 @@ bool zero(int* state) {
             debugln("zeroed successfully");
             stepper.stop();
             stepper.setCurrentPosition(0);
-            stepper.moveTo(0);
             stepper.setMaxSpeed(1000);
             zeroed = true;
         }
@@ -131,7 +140,7 @@ bool zero(int* state) {
 
     case 2:
         if (digitalRead(lowerLimitSwitch) == 1) {
-            if (stepper.currentPosition() == -1000)
+            if (stepper.currentPosition() <= -1000)
             debugln("failed to zero");
                 *state = 3; // zero has failed
         } else {
@@ -142,6 +151,9 @@ bool zero(int* state) {
             stepper.setMaxSpeed(1000);
             zeroed = true;
         }
+        break;
+
+    default:
         break;
     }
     return zeroed;
