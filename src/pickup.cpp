@@ -10,6 +10,9 @@
 #define STEP_PERIOD 500
 #define MAX_SPEED 1000
 
+#define IDLE_POSITION -2500
+#define DROPOFF_POSITION -9000
+
 const int electromagnetPin = 34;
 const int stepPin = 42;
 const int dirPin = 43;
@@ -69,31 +72,48 @@ void pickup(int* state) {
     switch (*state)
     {
     case 0:
-        moveStepper(1000);
+        moveStepper(10000);
+        stepper.setMaxSpeed(1000);
         *state = 1;
+        debugln("moving to pickup");
+        enableMagnet();
         break;
     case 1:
+    debugln("case 1");
         if (digitalRead(inductiveProx) == 1 && digitalRead(carriageContactSwitch) == 0) {
+            stepper.stop();
             *state = 2; // weight detected, ready to pick up
+            debugln("encountered weight");
         } else if (digitalRead(inductiveProx) == 0 && digitalRead(carriageContactSwitch) == 0) {
-            *state = 10; // dummy weight/obstacle detected
+            // *state = 10; // dummy weight/obstacle detected
+            stepper.stop();
+            *state = 2; // for testing
+            debugln("encountered weight");
+        } else if (digitalRead(lowerLimitSwitch) == 0) {
+            stepper.stop();
+            *state = 10; // failed
         }
         break;
     case 2:
-        enableMagnet();
-        moveStepper(-2000);
+        moveStepper(DROPOFF_POSITION);
+        stepper.setMaxSpeed(1000);
+        debugln("moving stepper back");
         *state = 3;
         break;
     case 3:
-        if (stepper.currentPosition() == -2000) {
+        debugln("waiting for stepper to reach target");
+        if (stepper.currentPosition() <= DROPOFF_POSITION) {
             *state = 4;
+            debugln("stepper has reached destination");
         }
         break;
     case 4:
         disableMagnet();
+        debugln("dropping weight");
         *state = 5;
         break;
     case 5: // completed
+    moveStepper(IDLE_POSITION);
         break;
     
     default:
@@ -106,8 +126,12 @@ bool zero(int* state) {
     static bool zeroed = false;
     static bool initial = true;
 
+    if (zeroed == true) {
+        zeroed = false;
+    }
+
     if (initial) {
-    stepper.setMaxSpeed(500);
+    stepper.setMaxSpeed(1000);
     initial = false;
     }
 
@@ -117,13 +141,13 @@ bool zero(int* state) {
         // try moving in first direction - N.B. if this initial direction is
         // right then the rest should work fine without requiring rewrite
 
-        moveStepper(1000);
+        moveStepper(10000);
         *state = 1;
         break;
     case 1: //
         if (digitalRead(lowerLimitSwitch) == 1) {
             debugln("limit switch not detected");
-            if (stepper.currentPosition() >= 1000) {
+            if (stepper.currentPosition() >= 10000) {
                 debugln("trying other direction");
                 stepper.moveTo(-1000);
                 *state = 2; // try moving the other way?
@@ -135,14 +159,16 @@ bool zero(int* state) {
             stepper.setCurrentPosition(0);
             stepper.setMaxSpeed(1000);
             zeroed = true;
+            moveStepper(IDLE_POSITION);
         }
         break;
 
     case 2:
         if (digitalRead(lowerLimitSwitch) == 1) {
-            if (stepper.currentPosition() <= -1000)
-            debugln("failed to zero");
+            if (stepper.currentPosition() <= -1000) {
+                debugln("failed to zero");
                 *state = 3; // zero has failed
+            }
         } else {
             debugln("zeroed successfully on second try");
             // zeroed successfully
@@ -150,7 +176,12 @@ bool zero(int* state) {
             stepper.setCurrentPosition(0);
             stepper.setMaxSpeed(1000);
             zeroed = true;
+            moveStepper(IDLE_POSITION);
         }
+        break;
+
+    case 3: //stepper has failed
+
         break;
 
     default:

@@ -65,6 +65,8 @@ void setup() {
     digitalWrite(49, 1);                 // Enable IO power on main CPU board
     initSerial();
 
+    Serial.begin(115200);
+
     // Initialise timer ITimer1
     Timer1.initialize(TIMER_INTERRUPT_PERIOD);
     Timer1.attachInterrupt(TimerHandler);
@@ -75,16 +77,16 @@ void setup() {
 
     pinMode(proximityPin, INPUT);
 
-    Robot.mode = 3; // being boot sequence by zeroing pickup carriage
+    Robot.mode = 3; // begin boot sequence by zeroing pickup carriage
     // Robot.mode = 0; // set robot to debug mode
 }
 
 void loop() {
     // debugln("looped");
-
     // this function updates the current position of the stepper motor, 
     // calculates what it needs to do and where it needs to go
     runStepper();
+    Serial.println(Robot.mode);
     if (Robot.scanFlag) {
         // e.g. if timer interrupt has triggered and it's time to scan
 
@@ -109,7 +111,7 @@ void loop() {
             if (Robot.weightHeading == 32767) { // i.e. whatever output from detectWeights means there are no weights
                 Robot.mode = 0;
             } else if (digitalRead(weightBayMicro) == 0) {
-                Robot.mode = 1; // we got one
+                Robot.mode = 2; // we got one
             }
 
             motorControl(Robot.IRResult); // control motors based on sensor output
@@ -119,7 +121,6 @@ void loop() {
         case 1: // WEIGHT DETECTED, MOVING TO PICKUP
             debugln("weight detected");
             Robot.weightPresent = digitalRead(weightBayMicro); // check whether there is a weight in the pickup area
-            smartControl(1500, 1500);
             Robot.CheckTimeout();
 
             // while weight is not in detection zone/if weight is not in detection zone
@@ -143,12 +144,14 @@ void loop() {
             break;
 
         case 2: // PICKING UP WEIGHT
-            debugln("picking up weight");
-            Robot.CheckTimeout();
+            // debugln("picking up weight");
+            smartControl(1500, 1500);
+            //Robot.CheckTimeout();
             if(Robot.pickupState == 5) { // weight pickup complete
-                Robot.mode = 0;
+                debugln("pickup complete");
+                Robot.mode = 3;
             } else if (Robot.pickupState == 10) { // dummy weight
-                Robot.mode = 5;
+                Robot.mode = 100;
             } else {
                 pickup(&Robot.pickupState); // continue pickup fsm
             }
@@ -158,6 +161,8 @@ void loop() {
             if (zero(&Robot.zeroState)) {
                 debugln("zero completed");
                 Robot.mode = 0; // begin the hunt
+                moveStepper(-5000);
+                Robot.zeroState = 0;
             }
             break;
 
@@ -173,14 +178,7 @@ void loop() {
             }
             break;
 
-        case 100: //DEBUG MODE
-            rightObstacle.averageSensor();
-            debug("Right obstacle");
-            debugln(rightObstacle.averaged);
-            leftObstacle.averageSensor();
-            debug("Left obstacle");
-            debugln(leftObstacle.averaged);
-            delay(50);
+        case 100: //DEBUG MODE0
             break;
     }
 }

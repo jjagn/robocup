@@ -8,7 +8,7 @@
 #define STOP 1500
 #define BACKWARD_SLOW 1200
 #define BACKWARD_FAST 1000
-#define ACCELERATION 10
+#define ACCELERATION 50
 
 Servo right;      // create servo object to control a servo
 Servo left;      // create servo object to control a servo
@@ -25,61 +25,61 @@ void smartControl(int rightTarget, int leftTarget) {
     // implements motor control with acceleration, hopefully 
     int rightSpeed = right.readMicroseconds();
     int leftSpeed = left.readMicroseconds();
-    debug("right speed: "); debugln(rightSpeed);
-    debug("left speed: "); debugln(leftSpeed);
+    // debug("right speed: "); debugln(rightSpeed);
+    // debug("left speed: "); debugln(leftSpeed);
 
     int rightOut = rightSpeed;
     int leftOut = leftSpeed;
 
     if (rightTarget > rightSpeed) {
         rightOut += ACCELERATION;
-        debugln("accelerating right");
+        // debugln("accelerating right");
     }
     
     if (leftTarget > leftSpeed) {
         leftOut += ACCELERATION;
-        debugln("accelerating left");
+        // debugln("accelerating left");
     }
 
     if (rightTarget < rightSpeed) {
         rightOut -= ACCELERATION;
-        debugln("decelerating right");
+        // debugln("decelerating right");
     }
 
     if (leftTarget < leftSpeed) {
-        debugln("decelerating left");
+        // debugln("decelerating left");
         leftOut -= ACCELERATION;
     }
 
-    debug("right output speed: "); debugln(rightOut);
-    debug("left output speed: "); debugln(leftOut);
+    // debug("right output speed: "); debugln(rightOut);
+    // debug("left output speed: "); debugln(leftOut);
 
     right.writeMicroseconds(rightOut);
     left.writeMicroseconds(leftOut);
 }
 
 void turnLeft() {
-    debugln("turning left");
+    // debugln("turning left");
     smartControl(FORWARD_FAST, BACKWARD_FAST);
 }
 
 void turnRight() {
-    debugln("turning right");
+    // debugln("turning right");
     smartControl(BACKWARD_FAST, FORWARD_FAST); 
 }
 
 void driveStraight() {
-    debugln("driving straight");
+    // debugln("driving straight");
     smartControl(FORWARD_FAST, FORWARD_FAST);
 }
 
 void creep() {
-    debugln("creeping forward");
+    // debugln("creeping forward");
     smartControl(FORWARD_SLOW, FORWARD_SLOW);
 }
 
 void reverse() {
-    debugln("reversing");
+    // debugln("reversing");
     smartControl(BACKWARD_FAST, BACKWARD_FAST);
 }
 

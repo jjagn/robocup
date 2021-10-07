@@ -38,16 +38,16 @@ struct Sensor {
         // debug("Sensor: ");
         // debugln(name);
         // debug("Sensor value:");
-        debug("raw:");
-        debug(value);
-        debug(",");
+        // debug("raw:");
+        // debug(value);
+        // debug(",");
         readings[index] = value;           // Add the newest reading to the window
         sum = sum + value;                 // Add the newest reading to the sum
         index = (index+1) % BUFFER_SIZE;   // Increment the index, and wrap to 0 if it exceeds the window size
 
         averaged = sum / BUFFER_SIZE;      // Divide the sum of the window by the window size for the result
-        debug("filtered:");
-        debugln(averaged);
+        // debug("filtered:");
+        // debugln(averaged);
     }
 };
 

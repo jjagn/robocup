@@ -17,6 +17,8 @@ typedef struct Robostruct {
     int abortLimit1 = 100;
     int abortLimit2 = 100;
 
+    bool zeroed = false;
+
     int weightHeading;
     int IRResult;
     volatile int scan = 0;
