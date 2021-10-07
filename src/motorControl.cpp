@@ -21,34 +21,66 @@ void initMotors() {
     right.writeMicroseconds(STOP);
 }
 
+void smartControl(int rightTarget, int leftTarget) {
+    // implements motor control with acceleration, hopefully 
+    int rightSpeed = right.readMicroseconds();
+    int leftSpeed = left.readMicroseconds();
+    debug("right speed: "); debugln(rightSpeed);
+    debug("left speed: "); debugln(leftSpeed);
+
+    int rightOut = rightSpeed;
+    int leftOut = leftSpeed;
+
+    if (rightTarget > rightSpeed) {
+        rightOut += ACCELERATION;
+        debugln("accelerating right");
+    }
+    
+    if (leftTarget > leftSpeed) {
+        leftOut += ACCELERATION;
+        debugln("accelerating left");
+    }
+
+    if (rightTarget < rightSpeed) {
+        rightOut -= ACCELERATION;
+        debugln("decelerating right");
+    }
+
+    if (leftTarget < leftSpeed) {
+        debugln("decelerating left");
+        leftOut -= ACCELERATION;
+    }
+
+    debug("right output speed: "); debugln(rightOut);
+    debug("left output speed: "); debugln(leftOut);
+
+    right.writeMicroseconds(rightOut);
+    left.writeMicroseconds(leftOut);
+}
+
 void turnLeft() {
     debugln("turning left");
-    right.writeMicroseconds(FORWARD_SLOW);      // turn left 
-    left.writeMicroseconds(BACKWARD_SLOW); 
+    smartControl(FORWARD_FAST, BACKWARD_FAST);
 }
 
 void turnRight() {
     debugln("turning right");
-    right.writeMicroseconds(BACKWARD_SLOW);      // turn right
-    left.writeMicroseconds(FORWARD_SLOW);  
+    smartControl(BACKWARD_FAST, FORWARD_FAST); 
 }
 
 void driveStraight() {
     debugln("driving straight");
-    right.writeMicroseconds(FORWARD_FAST);
-    left.writeMicroseconds(FORWARD_FAST);
+    smartControl(FORWARD_FAST, FORWARD_FAST);
 }
 
 void creep() {
     debugln("creeping forward");
-    right.writeMicroseconds(FORWARD_SLOW);
-    left.writeMicroseconds(FORWARD_SLOW);
+    smartControl(FORWARD_SLOW, FORWARD_SLOW);
 }
 
 void reverse() {
     debugln("reversing");
-    right.writeMicroseconds(BACKWARD_SLOW);
-    left.writeMicroseconds(BACKWARD_SLOW);
+    smartControl(BACKWARD_FAST, BACKWARD_FAST);
 }
 
 void motorControl(int IRVal) {
@@ -68,10 +100,7 @@ void motorControl(int IRVal) {
         case(4):
             // debugln("Fully obstructed");
             // drive both backwards then turn left?
-            reverse();
-            delay(1000);
-            turnLeft();
-            delay(1000);
+            turnLeft(); 
             break;
     }
 }
