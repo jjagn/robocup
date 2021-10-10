@@ -65,8 +65,6 @@ void setup() {
     digitalWrite(49, 1);                 // Enable IO power on main CPU board
     initSerial();
 
-    Serial.begin(115200);
-
     // Initialise timer ITimer1
     Timer1.initialize(TIMER_INTERRUPT_PERIOD);
     Timer1.attachInterrupt(TimerHandler);
@@ -86,7 +84,6 @@ void loop() {
     // this function updates the current position of the stepper motor, 
     // calculates what it needs to do and where it needs to go
     runStepper();
-    Serial.println(Robot.mode);
     if (Robot.scanFlag) {
         // e.g. if timer interrupt has triggered and it's time to scan
 
@@ -108,10 +105,10 @@ void loop() {
     switch(Robot.mode) {
         case 0: // SEARCHING FOR WEIGHTS
             debugln("searching for weights");
-            if (Robot.weightHeading == 32767) { // i.e. whatever output from detectWeights means there are no weights
-                Robot.mode = 0;
-            } else if (digitalRead(weightBayMicro) == 0) {
-                Robot.mode = 2; // we got one
+            if (digitalRead(weightBayMicro) == 0) { 
+                Robot.mode = 2;
+            } else if (Robot.weightHeading == 32767) {
+                Robot.mode = 0; // we got one
             }
 
             motorControl(Robot.IRResult); // control motors based on sensor output
@@ -150,6 +147,7 @@ void loop() {
             if(Robot.pickupState == 5) { // weight pickup complete
                 debugln("pickup complete");
                 Robot.mode = 3;
+                Robot.pickupState = 0;
             } else if (Robot.pickupState == 10) { // dummy weight
                 Robot.mode = 100;
             } else {
@@ -161,7 +159,6 @@ void loop() {
             if (zero(&Robot.zeroState)) {
                 debugln("zero completed");
                 Robot.mode = 0; // begin the hunt
-                moveStepper(-5000);
                 Robot.zeroState = 0;
             }
             break;

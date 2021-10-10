@@ -3,15 +3,17 @@
 #include <AccelStepper.h>
 #include "debug.h"
 
-#define NUM_PULSES 200
 #define RAISE 1
 #define LOWER 0
 #define TIMEOUT_LIMIT 1000
-#define STEP_PERIOD 500
-#define MAX_SPEED 1000
+#define MICROSTEP 1
 
-#define IDLE_POSITION -2500
-#define DROPOFF_POSITION -9000
+#define MAX_SPEED 1000*MICROSTEP
+#define MAX_ACCELERATION 1000*MICROSTEP
+#define IDLE_POSITION -5000*MICROSTEP
+#define DROPOFF_POSITION -6500*MICROSTEP
+#define ZERO_FORWARD_TARGET 10000*MICROSTEP
+#define ZERO_REAR_TARGET -5000*MICROSTEP
 
 const int electromagnetPin = 34;
 const int stepPin = 42;
@@ -28,11 +30,11 @@ void initPickup(void) {
     pinMode(electromagnetPin, OUTPUT);
     pinMode(stepPin, OUTPUT);
     pinMode(dirPin, OUTPUT);
-    stepper.setMaxSpeed(1000);
-    stepper.setAcceleration(2000);
+    stepper.setMaxSpeed(MAX_SPEED);
+    stepper.setAcceleration(MAX_ACCELERATION);
 }
 
-void moveStepper(int target) {
+void moveStepper(long target) {
     stepper.moveTo(target);
 }
 
@@ -50,8 +52,8 @@ void moveStepperToLimit(int limitSwitch) {
 
 void cycle() {
     if (stepper.currentPosition() <= 0)
-        stepper.moveTo(5000);
-    else if (stepper.currentPosition() >= 5000)
+        stepper.moveTo(ZERO_FORWARD_TARGET);
+    else if (stepper.currentPosition() >= ZERO_FORWARD_TARGET)
         stepper.moveTo(0);
 }
 
@@ -72,8 +74,8 @@ void pickup(int* state) {
     switch (*state)
     {
     case 0:
-        moveStepper(10000);
-        stepper.setMaxSpeed(1000);
+        moveStepper(ZERO_FORWARD_TARGET);
+        stepper.setMaxSpeed(MAX_SPEED);
         *state = 1;
         debugln("moving to pickup");
         enableMagnet();
@@ -96,7 +98,7 @@ void pickup(int* state) {
         break;
     case 2:
         moveStepper(DROPOFF_POSITION);
-        stepper.setMaxSpeed(1000);
+        stepper.setMaxSpeed(MAX_SPEED);
         debugln("moving stepper back");
         *state = 3;
         break;
@@ -131,7 +133,7 @@ bool zero(int* state) {
     }
 
     if (initial) {
-    stepper.setMaxSpeed(1000);
+    stepper.setMaxSpeed(MAX_SPEED);
     initial = false;
     }
 
@@ -141,15 +143,15 @@ bool zero(int* state) {
         // try moving in first direction - N.B. if this initial direction is
         // right then the rest should work fine without requiring rewrite
 
-        moveStepper(10000);
+        moveStepper(ZERO_FORWARD_TARGET);
         *state = 1;
         break;
     case 1: //
         if (digitalRead(lowerLimitSwitch) == 1) {
             debugln("limit switch not detected");
-            if (stepper.currentPosition() >= 10000) {
+            if (stepper.currentPosition() >= ZERO_FORWARD_TARGET) {
                 debugln("trying other direction");
-                stepper.moveTo(-1000);
+                stepper.moveTo(ZERO_REAR_TARGET);
                 *state = 2; // try moving the other way?
             }
         } else {
@@ -157,7 +159,7 @@ bool zero(int* state) {
             debugln("zeroed successfully");
             stepper.stop();
             stepper.setCurrentPosition(0);
-            stepper.setMaxSpeed(1000);
+            stepper.setMaxSpeed(MAX_SPEED);
             zeroed = true;
             moveStepper(IDLE_POSITION);
         }
@@ -165,7 +167,7 @@ bool zero(int* state) {
 
     case 2:
         if (digitalRead(lowerLimitSwitch) == 1) {
-            if (stepper.currentPosition() <= -1000) {
+            if (stepper.currentPosition() <= ZERO_REAR_TARGET) {
                 debugln("failed to zero");
                 *state = 3; // zero has failed
             }
@@ -174,7 +176,7 @@ bool zero(int* state) {
             // zeroed successfully
             stepper.stop();
             stepper.setCurrentPosition(0);
-            stepper.setMaxSpeed(1000);
+            stepper.setMaxSpeed(MAX_SPEED);
             zeroed = true;
             moveStepper(IDLE_POSITION);
         }
