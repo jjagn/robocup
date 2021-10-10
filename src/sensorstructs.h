@@ -71,9 +71,9 @@ struct WeightSensors : public SensorGroup {
             leftVal = left->averaged;
             rightVal = right->averaged;
             
-            if (rightVal > right->prox && leftVal > left->prox) {
+            if (rightVal > right->prox || leftVal > left->prox) {
                 // we have detected a weight, somewhere out there
-                output = leftVal - rightVal;
+                output = rightVal - leftVal;
             } else {
                 output = 32767;
             }

@@ -9,7 +9,7 @@
 #include "sensorstructs.h"
 #include "debug.h"
 
-#define WEIGHT_DETECTION_ANGULAR_TOLERANCE 50
+#define WEIGHT_DETECTION_ANGULAR_TOLERANCE 100
 
 #define TIMER_UPDATE_FREQ 1000
 #define TIMER_INTERRUPT_PERIOD 1000000 / TIMER_UPDATE_FREQ
@@ -19,16 +19,16 @@
 
 #define RIGHT_OBSTACLE_PIN A0
 #define LEFT_OBSTACLE_PIN A1
-#define RIGHT_WEIGHT_PIN A3
-#define LEFT_WEIGHT_PIN A2
+#define RIGHT_WEIGHT_PIN A2
+#define LEFT_WEIGHT_PIN A3
 
 // g for global = g for good
 // declaring the many beautiful structs our program uses
 struct Robostruct Robot;
 struct Sensor rightObstacle = Sensor(RIGHT_OBSTACLE_PIN, 200, "right obstacle");
 struct Sensor leftObstacle = Sensor(LEFT_OBSTACLE_PIN, 200, "left obstacle");
-struct Sensor rightWeight = Sensor(RIGHT_WEIGHT_PIN, 100, "right weight");
-struct Sensor leftWeight = Sensor(LEFT_OBSTACLE_PIN, 100, "left weight");
+struct Sensor rightWeight = Sensor(RIGHT_WEIGHT_PIN, 200, "right weight");
+struct Sensor leftWeight = Sensor(LEFT_WEIGHT_PIN, 200, "left weight");
 
 struct ObstacleSensors obstacleSensors = ObstacleSensors(&rightObstacle, &leftObstacle);
 struct WeightSensors weightSensors = WeightSensors(&rightWeight, &leftWeight);
@@ -109,8 +109,8 @@ void loop() {
 
             if (digitalRead(weightBayMicro) == 0) { 
                 Robot.mode = 2;
-            } else if (Robot.weightHeading == 32767) {
-                Robot.mode = 0; // we got one
+            } else if (Robot.weightHeading != 32767) {
+                Robot.mode = 1; // we got one
             }
 
             motorControl(Robot.IRResult); // control motors based on sensor output
@@ -120,6 +120,10 @@ void loop() {
         case 1: // WEIGHT DETECTED, MOVING TO PICKUP
             debugln("weight detected");
 
+            if (Robot.IRResult != 3) { // if an obstacle is detected, stop trying to pickup
+                Robot.mode = 5;
+            }
+
             Robot.weightPresent = digitalRead(weightBayMicro); // check whether there is a weight in the pickup area
             Robot.CheckTimeout();
 
@@ -127,7 +131,7 @@ void loop() {
             // as long as the weight is not just a wall
             if (Robot.weightPresent == 1) {
                 debugln("no weight in weight bay");
-                if (Robot.weightHeading > WEIGHT_DETECTION_ANGULAR_TOLERANCE) {
+                if (Robot.weightHeading > WEIGHT_DETECTION_ANGULAR_TOLERANCE && Robot.weightHeading != 32767) {
                     debugln("weight is right, turning right");
                     turnRight();
                 } else if (Robot.weightHeading < -WEIGHT_DETECTION_ANGULAR_TOLERANCE) {
@@ -170,18 +174,30 @@ void loop() {
             break;
 
         case 5: //aborting pickup
-            if (++Robot.abortTimer1 <= Robot.abortLimit1) { // reverse for a bit
+            static bool abort_first_loop = true;
+            static unsigned long startTime;
+            if (abort_first_loop) {
+                startTime = millis();
+                abort_first_loop = false;;
+            }
+            unsigned long timeNow = millis();
+
+            unsigned long currentTime = timeNow - startTime;
+            if (currentTime <= Robot.abortLimit1) { // reverse for a bit
                 reverse();
-            } else if (++Robot.abortTimer2 <= Robot.abortLimit2) { // turn for a bit
+            } else if (currentTime <= Robot.abortLimit1 + Robot.abortLimit2) { // turn for a bit
                 turnLeft();
             } else { // return to hunting for weights
+                Robot.mode = 0;
                 Robot.abortTimer1 = 0;
                 Robot.abortTimer2 = 0;
-                Robot.mode = 0;
+                abort_first_loop = true;
             }
             break;
 
         case 100: //DEBUG MODE
+            stop();
+            while(1) continue;
             break;
     }
 }
