@@ -9,7 +9,7 @@
 #define MICROSTEP 1
 
 #define MAX_SPEED 1000*MICROSTEP
-#define MAX_ACCELERATION 1000*MICROSTEP
+#define MAX_ACCELERATION 2000*MICROSTEP
 #define IDLE_POSITION -5000*MICROSTEP
 #define DROPOFF_POSITION -6500*MICROSTEP
 #define ZERO_FORWARD_TARGET 10000*MICROSTEP
@@ -82,7 +82,11 @@ void pickup(int* state) {
         break;
     case 1:
     debugln("case 1");
-        if (digitalRead(inductiveProx) == 1 && digitalRead(carriageContactSwitch) == 0) {
+        if (digitalRead(lowerLimitSwitch) == 0) {
+            stepper.stop();
+            moveStepper(IDLE_POSITION);
+            *state = 10; // failed
+        } else if (digitalRead(inductiveProx) == 1 && digitalRead(carriageContactSwitch) == 0) {
             stepper.stop();
             *state = 2; // weight detected, ready to pick up
             debugln("encountered weight");
@@ -91,9 +95,6 @@ void pickup(int* state) {
             stepper.stop();
             *state = 2; // for testing
             debugln("encountered weight");
-        } else if (digitalRead(lowerLimitSwitch) == 0) {
-            stepper.stop();
-            *state = 10; // failed
         }
         break;
     case 2:
@@ -119,6 +120,7 @@ void pickup(int* state) {
         break;
     
     default:
+        stepper.stop();
         break; 
     }
 }

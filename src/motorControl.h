@@ -21,6 +21,8 @@ void creep();
 
 void reverse();
 
+void stop();
+
 void smartControl(int rightTarget, int leftTarget);
 
 #endif

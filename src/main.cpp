@@ -25,8 +25,8 @@
 // g for global = g for good
 // declaring the many beautiful structs our program uses
 struct Robostruct Robot;
-struct Sensor rightObstacle = Sensor(RIGHT_OBSTACLE_PIN, 100, "right obstacle");
-struct Sensor leftObstacle = Sensor(LEFT_OBSTACLE_PIN, 100, "left obstacle");
+struct Sensor rightObstacle = Sensor(RIGHT_OBSTACLE_PIN, 200, "right obstacle");
+struct Sensor leftObstacle = Sensor(LEFT_OBSTACLE_PIN, 200, "left obstacle");
 struct Sensor rightWeight = Sensor(RIGHT_WEIGHT_PIN, 100, "right weight");
 struct Sensor leftWeight = Sensor(LEFT_OBSTACLE_PIN, 100, "left weight");
 
@@ -84,6 +84,7 @@ void loop() {
     // this function updates the current position of the stepper motor, 
     // calculates what it needs to do and where it needs to go
     runStepper();
+
     if (Robot.scanFlag) {
         // e.g. if timer interrupt has triggered and it's time to scan
 
@@ -105,6 +106,7 @@ void loop() {
     switch(Robot.mode) {
         case 0: // SEARCHING FOR WEIGHTS
             debugln("searching for weights");
+
             if (digitalRead(weightBayMicro) == 0) { 
                 Robot.mode = 2;
             } else if (Robot.weightHeading == 32767) {
@@ -117,6 +119,7 @@ void loop() {
         
         case 1: // WEIGHT DETECTED, MOVING TO PICKUP
             debugln("weight detected");
+
             Robot.weightPresent = digitalRead(weightBayMicro); // check whether there is a weight in the pickup area
             Robot.CheckTimeout();
 
@@ -142,20 +145,23 @@ void loop() {
 
         case 2: // PICKING UP WEIGHT
             // debugln("picking up weight");
-            smartControl(1500, 1500);
+            stop();
             //Robot.CheckTimeout();
             if(Robot.pickupState == 5) { // weight pickup complete
                 debugln("pickup complete");
                 Robot.mode = 3;
                 Robot.pickupState = 0;
             } else if (Robot.pickupState == 10) { // dummy weight
-                Robot.mode = 100;
+                Robot.mode = 5;
+                Robot.pickupState = 0;
             } else {
                 pickup(&Robot.pickupState); // continue pickup fsm
             }
             break;
 
         case 3: // zeroing 
+            motorControl(Robot.IRResult); // control motors based on sensor output
+
             if (zero(&Robot.zeroState)) {
                 debugln("zero completed");
                 Robot.mode = 0; // begin the hunt
@@ -175,7 +181,7 @@ void loop() {
             }
             break;
 
-        case 100: //DEBUG MODE0
+        case 100: //DEBUG MODE
             break;
     }
 }
