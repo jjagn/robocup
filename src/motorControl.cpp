@@ -111,5 +111,6 @@ void motorControl(int IRVal) {
                 
             }
             break; 
+        }
     }
 }
