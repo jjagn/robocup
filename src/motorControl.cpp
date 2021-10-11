@@ -71,6 +71,20 @@ void stop() {
 }
 
 void motorControl(int IRVal) {
+    static unsigned long reverseTimerStart;
+    unsigned long currentTime;
+    unsigned long timeElapsed;
+    static bool reversing = false;
+    static bool initial = true;
+
+    if (reversing) {
+        if (initial) {
+            reverseTimerStart = millis();
+            initial = false;
+        }
+        IRVal = 5;
+        currentTime = millis();
+
     switch(IRVal) {
         case(1):
             turnLeft();
@@ -85,12 +99,17 @@ void motorControl(int IRVal) {
             break;
 
         case(4):
-            // debugln("Fully obstructed");
-            // drive both backwards then turn left?
-            reverse();
-            delay(250);
-            turnLeft(); 
-            delay(500);
-            break;
+            reversing = true;
+        case(5):
+            currentTime = millis();
+            timeElapsed = currentTime - reverseTimerStart;
+            if (timeElapsed < 500) {
+                reverse();
+            } else if (timeElapsed < 1000) {
+                turnLeft();
+            } else {
+                
+            }
+            break; 
     }
 }
