@@ -54,30 +54,62 @@ struct Sensor {
 struct SensorGroup {
     Sensor *right;
     Sensor *left;
+    Sensor *rightUpper;
+    Sensor *leftUpper;
     int rightVal;
     int leftVal;
+    int rightUpperVal;
+    int leftUpperVal;
     int output;
 };
 
 struct WeightSensors : public SensorGroup {
-
-        WeightSensors(Sensor *r, Sensor *l) {
+        WeightSensors(Sensor *r, Sensor *l, Sensor *ru, Sensor *lu) {
         right = r;
         left = l;
+        rightUpper = ru;
+        leftUpper = lu;
     }
+
+    int weightDetectCounter = 0;
+    int weightDetectThreshold = 100;
         
         int detectWeights() {
 
             leftVal = left->averaged;
             rightVal = right->averaged;
-            
-            if (rightVal > right->prox && leftVal > left->prox) {
-                // we have detected a weight, somewhere out there
-                output = leftVal - rightVal;
-            } else {
-                output = 32767;
+            rightUpperVal = rightUpper->averaged;
+            leftUpperVal = leftUpper->averaged;
+            int result = 100;
+
+            if (leftVal > left->prox) {
+                if (leftUpperVal < leftUpper->prox) {
+                    // weight detected left
+                    if(weightDetectCounter++ > weightDetectThreshold) {
+                        result = 1;
+                        weightDetectCounter = 0;
+                    }
+                } else {
+                    //wall detected left
+                    weightDetectCounter = 0;
+                    result = 10;
+                }
+            } else if (rightVal > right->prox) {
+                if (rightUpperVal < rightUpper->prox) {
+                // weight detected right
+                    if(weightDetectCounter++ > weightDetectThreshold) {
+                            result = 2;
+                            weightDetectCounter = 0;
+                    } 
+                } else {
+                    // wall detected right
+                    weightDetectCounter = 0;
+                    result = 11;
+                }
             }
-            return output;
+            
+            
+            return result;
         }
     };
 
