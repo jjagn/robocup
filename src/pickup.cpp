@@ -8,10 +8,10 @@
 #define TIMEOUT_LIMIT 1000
 #define MICROSTEP 1
 
-#define MAX_SPEED 1000*MICROSTEP
+#define MAX_SPEED 1500*MICROSTEP
 #define MAX_ACCELERATION 2000*MICROSTEP
 #define IDLE_POSITION -5000*MICROSTEP
-#define DROPOFF_POSITION -6500*MICROSTEP
+#define DROPOFF_POSITION -7500*MICROSTEP
 #define ZERO_FORWARD_TARGET 10000*MICROSTEP
 #define ZERO_REAR_TARGET -5000*MICROSTEP
 
@@ -112,6 +112,7 @@ void pickup(int* state) {
         break;
     case 4:
         disableMagnet();
+        delay(150);
         debugln("dropping weight");
         *state = 5;
         break;
@@ -150,7 +151,6 @@ bool zero(int* state) {
         break;
     case 1: //
         if (digitalRead(lowerLimitSwitch) == 1) {
-            debugln("limit switch not detected");
             if (stepper.currentPosition() >= ZERO_FORWARD_TARGET) {
                 debugln("trying other direction");
                 stepper.moveTo(ZERO_REAR_TARGET);
@@ -184,8 +184,8 @@ bool zero(int* state) {
         }
         break;
 
-    case 3: //stepper has failed
-
+    case 3: //zero has failed
+        *state = 0;
         break;
 
     default:

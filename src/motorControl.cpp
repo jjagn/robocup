@@ -87,8 +87,10 @@ void motorControl(int IRVal) {
         case(4):
             // debugln("Fully obstructed");
             // drive both backwards then turn left?
+            reverse();
+            delay(250);
             turnLeft(); 
-            delay(2500);
+            delay(500);
             break;
     }
 }
