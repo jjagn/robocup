@@ -25,16 +25,18 @@
 // g for global = g for good
 // declaring the many beautiful structs our program uses
 struct Robostruct Robot;
-struct Sensor rightObstacle = Sensor(RIGHT_OBSTACLE_PIN, 200, "right obstacle");
-struct Sensor leftObstacle = Sensor(LEFT_OBSTACLE_PIN, 200, "left obstacle");
+struct Sensor rightObstacle = Sensor(RIGHT_OBSTACLE_PIN, 100, "right obstacle");
+struct Sensor leftObstacle = Sensor(LEFT_OBSTACLE_PIN, 100, "left obstacle");
 struct Sensor rightWeight = Sensor(RIGHT_WEIGHT_PIN, 100, "right weight");
-struct Sensor leftWeight = Sensor(LEFT_OBSTACLE_PIN, 100, "left weight");
+struct Sensor leftWeight = Sensor(LEFT_WEIGHT_PIN, 100, "left weight");
 
 struct ObstacleSensors obstacleSensors = ObstacleSensors(&rightObstacle, &leftObstacle);
 struct WeightSensors weightSensors = WeightSensors(&rightWeight, &leftWeight);
 
 const int proximityPin = A5;
 const int weightBayMicro = 41;
+const int carriageContactSwitch = 39;
+
 
 // for debugging, timing/profiling
 unsigned long beforeTime = 0;
@@ -105,10 +107,16 @@ void loop() {
 
     switch(Robot.mode) {
         case 0: // SEARCHING FOR WEIGHTS
+        {
             debugln("searching for weights");
 
-            if (digitalRead(weightBayMicro) == 0) { 
+            if (digitalRead(proximityPin) == 1) {
                 Robot.mode = 2;
+            } else if (digitalRead(weightBayMicro) == 0 && digitalRead(proximityPin) == 1) { 
+                Robot.mode = 2;
+            } else if (digitalRead(weightBayMicro) == 0 && digitalRead(proximityPin) == 0) {
+                // dummy weight
+                Robot.mode = 5; // abort
             } else if (Robot.weightHeading == 32767) {
                 Robot.mode = 0; // we got one
             }
@@ -116,8 +124,10 @@ void loop() {
             motorControl(Robot.IRResult); // control motors based on sensor output
 
             break;
+        }
         
         case 1: // WEIGHT DETECTED, MOVING TO PICKUP
+        {
             debugln("weight detected");
 
             Robot.weightPresent = digitalRead(weightBayMicro); // check whether there is a weight in the pickup area
@@ -142,8 +152,10 @@ void loop() {
                 Robot.mode = 2; // enter pickup mode
             }
             break;
+        }
 
         case 2: // PICKING UP WEIGHT
+        {
             // debugln("picking up weight");
             stop();
             //Robot.CheckTimeout();
@@ -158,28 +170,46 @@ void loop() {
                 pickup(&Robot.pickupState); // continue pickup fsm
             }
             break;
+        }
 
         case 3: // zeroing 
+        {
             motorControl(Robot.IRResult); // control motors based on sensor output
-
+            if (digitalRead(carriageContactSwitch) == 0) {
+                Robot.mode = 2;
+                Robot.zeroState = 0;
+            }
             if (zero(&Robot.zeroState)) {
                 debugln("zero completed");
                 Robot.mode = 0; // begin the hunt
                 Robot.zeroState = 0;
             }
             break;
+        }
 
         case 5: //aborting pickup
-            if (++Robot.abortTimer1 <= Robot.abortLimit1) { // reverse for a bit
+        {
+            static bool abort_first_loop = true;
+            static unsigned long startTime;
+            if (abort_first_loop) {
+                startTime = millis();
+                abort_first_loop = false;;
+            }
+            unsigned long timeNow = millis();
+
+            unsigned long currentTime = timeNow - startTime;
+            if (currentTime <= Robot.abortLimit1) { // reverse for a bit
                 reverse();
-            } else if (++Robot.abortTimer2 <= Robot.abortLimit2) { // turn for a bit
+            } else if (currentTime <= Robot.abortLimit1 + Robot.abortLimit2) { // turn for a bit
                 turnLeft();
             } else { // return to hunting for weights
+                Robot.mode = 0;
                 Robot.abortTimer1 = 0;
                 Robot.abortTimer2 = 0;
-                Robot.mode = 0;
+                abort_first_loop = true;
             }
             break;
+        }
 
         case 100: //DEBUG MODE
             break;
