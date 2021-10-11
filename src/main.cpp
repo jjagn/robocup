@@ -21,6 +21,8 @@
 #define LEFT_OBSTACLE_PIN A1
 #define RIGHT_WEIGHT_PIN A3
 #define LEFT_WEIGHT_PIN A2
+#define UPPER_RIGHT_PIN A7
+#define UPPER_LEFT_PIN A6
 
 // g for global = g for good
 // declaring the many beautiful structs our program uses
@@ -29,9 +31,12 @@ struct Sensor rightObstacle = Sensor(RIGHT_OBSTACLE_PIN, 100, "right obstacle");
 struct Sensor leftObstacle = Sensor(LEFT_OBSTACLE_PIN, 100, "left obstacle");
 struct Sensor rightWeight = Sensor(RIGHT_WEIGHT_PIN, 100, "right weight");
 struct Sensor leftWeight = Sensor(LEFT_WEIGHT_PIN, 100, "left weight");
+struct Sensor rightUpper = Sensor(UPPER_RIGHT_PIN, 100, "right upper");
+struct Sensor leftUpper = Sensor(UPPER_LEFT_PIN, 100, "left upper");
 
 struct ObstacleSensors obstacleSensors = ObstacleSensors(&rightObstacle, &leftObstacle);
-struct WeightSensors weightSensors = WeightSensors(&rightWeight, &leftWeight);
+struct WeightSensors weightSensors = WeightSensors(&rightWeight, &leftWeight, &rightUpper, &leftUpper);
+
 
 const int proximityPin = A5;
 const int weightBayMicro = 41;
@@ -100,6 +105,8 @@ void loop() {
         leftObstacle.averageSensor();
         rightWeight.averageSensor();
         leftWeight.averageSensor();
+        rightUpper.averageSensor();
+        leftUpper.averageSensor();
 
         Robot.weightHeading = weightSensors.detectWeights(); // scan lower sensors to see if there is a weight present
         Robot.IRResult = obstacleSensors.detectObstacle(); // take input from IR reading function
@@ -117,8 +124,14 @@ void loop() {
             } else if (digitalRead(weightBayMicro) == 0 && digitalRead(proximityPin) == 0) {
                 // dummy weight
                 Robot.mode = 5; // abort
-            } else if (Robot.weightHeading == 32767) {
-                Robot.mode = 0; // we got one
+            } else if (Robot.weightHeading < 10) {
+                Robot.mode = 1; // we got one
+            }
+
+            if (Robot.weightHeading == 10) {
+                Robot.IRResult = 2; // obstacle left
+            } else if (Robot.weightHeading == 11) {
+                Robot.IRResult = 1; // obstacle right
             }
 
             motorControl(Robot.IRResult); // control motors based on sensor output
