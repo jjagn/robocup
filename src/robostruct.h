@@ -17,6 +17,8 @@ typedef struct Robostruct {
     unsigned int abortLimit1 = 500;
     unsigned int abortLimit2 = 500;
 
+    unsigned int watchdogTimeout = 20000;
+
     bool zeroed = false;
 
     int weightHeading;
@@ -43,6 +45,23 @@ typedef struct Robostruct {
                     debugln("aborting pickup");
                     first_check = true;
                 }
+    }
+
+    unsigned long watchdogStartTime = millis();
+    unsigned long currentTimeWatchdog;
+
+    void checkWatchdog() {
+        currentTimeWatchdog = millis();
+        unsigned long timeElapsedSinceLastWatchdog = currentTimeWatchdog - watchdogStartTime;
+
+        if (timeElapsedSinceLastWatchdog > watchdogTimeout) {
+            debugln("watchdog timer triggered");
+            mode = 5;
+        }
+    }
+
+    void resetWatchdog() {
+        watchdogStartTime = millis();
     }
 
 } robostruct;

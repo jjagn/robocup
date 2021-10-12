@@ -11,7 +11,7 @@
 
 #define WEIGHT_DETECTION_ANGULAR_TOLERANCE 50
 
-#define TIMER_UPDATE_FREQ 1000
+#define TIMER_UPDATE_FREQ 20000
 #define TIMER_INTERRUPT_PERIOD 1000000 / TIMER_UPDATE_FREQ
 
 #define SCAN_RATE_HZ 50
@@ -19,20 +19,20 @@
 
 #define RIGHT_OBSTACLE_PIN A0
 #define LEFT_OBSTACLE_PIN A1
-#define RIGHT_WEIGHT_PIN A3
-#define LEFT_WEIGHT_PIN A2
-#define UPPER_RIGHT_PIN A7
-#define UPPER_LEFT_PIN A6
+#define RIGHT_WEIGHT_PIN A2
+#define LEFT_WEIGHT_PIN A3
+#define UPPER_RIGHT_PIN A6
+#define UPPER_LEFT_PIN A7
 
 // g for global = g for good
 // declaring the many beautiful structs our program uses
 struct Robostruct Robot;
-struct Sensor rightObstacle = Sensor(RIGHT_OBSTACLE_PIN, 100, "right obstacle");
-struct Sensor leftObstacle = Sensor(LEFT_OBSTACLE_PIN, 100, "left obstacle");
-struct Sensor rightWeight = Sensor(RIGHT_WEIGHT_PIN, 100, "right weight");
-struct Sensor leftWeight = Sensor(LEFT_WEIGHT_PIN, 100, "left weight");
-struct Sensor rightUpper = Sensor(UPPER_RIGHT_PIN, 100, "right upper");
-struct Sensor leftUpper = Sensor(UPPER_LEFT_PIN, 100, "left upper");
+struct Sensor rightObstacle = Sensor(RIGHT_OBSTACLE_PIN, 150, "right obstacle");
+struct Sensor leftObstacle = Sensor(LEFT_OBSTACLE_PIN, 150, "left obstacle");
+struct Sensor rightWeight = Sensor(RIGHT_WEIGHT_PIN, 150, "right weight");
+struct Sensor leftWeight = Sensor(LEFT_WEIGHT_PIN, 150, "left weight");
+struct Sensor rightUpper = Sensor(UPPER_RIGHT_PIN, 150, "right upper");
+struct Sensor leftUpper = Sensor(UPPER_LEFT_PIN, 150, "left upper");
 
 struct ObstacleSensors obstacleSensors = ObstacleSensors(&rightObstacle, &leftObstacle);
 struct WeightSensors weightSensors = WeightSensors(&rightWeight, &leftWeight, &rightUpper, &leftUpper);
@@ -65,6 +65,7 @@ void TimerHandler() {
         Robot.scanFlag = true;
         Robot.scan = 0;
     }
+    runStepper();
 }
 
 void setup() {
@@ -90,7 +91,6 @@ void loop() {
     // debugln("looped");
     // this function updates the current position of the stepper motor, 
     // calculates what it needs to do and where it needs to go
-    runStepper();
 
     if (Robot.scanFlag) {
         // e.g. if timer interrupt has triggered and it's time to scan
@@ -115,24 +115,32 @@ void loop() {
     switch(Robot.mode) {
         case 0: // SEARCHING FOR WEIGHTS
         {
-            debugln("searching for weights");
+            // debugln("searching for weights");
 
             if (digitalRead(proximityPin) == 1) {
                 Robot.mode = 2;
+                debugln("weight in weight bay");
             } else if (digitalRead(weightBayMicro) == 0 && digitalRead(proximityPin) == 1) { 
                 Robot.mode = 2;
+                debugln("weight in weight bay");
             } else if (digitalRead(weightBayMicro) == 0 && digitalRead(proximityPin) == 0) {
                 // dummy weight
                 Robot.mode = 5; // abort
+                debugln("dummy weight in weight bay");
             } else if (Robot.weightHeading < 10) {
                 Robot.mode = 1; // we got one
+                debugln("weight detected");
             }
 
             if (Robot.weightHeading == 10) {
                 Robot.IRResult = 2; // obstacle left
+                debugln("weight sensors detected obstacle left");
             } else if (Robot.weightHeading == 11) {
                 Robot.IRResult = 1; // obstacle right
+                debugln("weight sensors detected obstacle right");
             }
+
+            
 
             motorControl(Robot.IRResult); // control motors based on sensor output
 
@@ -146,19 +154,25 @@ void loop() {
             Robot.weightPresent = digitalRead(weightBayMicro); // check whether there is a weight in the pickup area
             Robot.CheckTimeout();
 
+            debug("weight bay micro: "); debugln(Robot.weightPresent);
+
+            if (Robot.weightHeading > 2) {
+                Robot.mode = 0;
+            }
+
             // while weight is not in detection zone/if weight is not in detection zone
             // as long as the weight is not just a wall
+
             if (Robot.weightPresent == 1) {
-                debugln("no weight in weight bay");
-                if (Robot.weightHeading > WEIGHT_DETECTION_ANGULAR_TOLERANCE) {
-                    debugln("weight is right, turning right");
-                    turnRight();
-                } else if (Robot.weightHeading < -WEIGHT_DETECTION_ANGULAR_TOLERANCE) {
-                    debugln("weight is left, turning left");
+                debugln("weight detected, no weight in weight bay");
+                if (Robot.weightHeading == 1) {
+                    debugln("weight left");
                     turnLeft();
-                } else {
-                    debugln("weight is directly ahead, creeping forward");
-                    creep();
+                    //weight to the left
+                } else if (Robot.weightHeading == 2) {
+                    //weight to the right
+                    debugln("weight right");
+                    turnRight();
                 }
             } else {
                 debugln("weight detected in pickup bay");
@@ -173,8 +187,9 @@ void loop() {
             stop();
             //Robot.CheckTimeout();
             if(Robot.pickupState == 5) { // weight pickup complete
+                moveStepper(-5000*2); // -7500*MICROSTEP
                 debugln("pickup complete");
-                Robot.mode = 3;
+                Robot.mode = 0;
                 Robot.pickupState = 0;
             } else if (Robot.pickupState == 10) { // dummy weight
                 Robot.mode = 5;

@@ -11,7 +11,7 @@ void initPickup(void);
 
 void pickup(int* state);
 
-void moveStepper(long target);
+void moveStepper(unsigned long target);
 
 void moveStepperToLimit(int limitSwitch);
 

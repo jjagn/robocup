@@ -72,7 +72,7 @@ struct WeightSensors : public SensorGroup {
     }
 
     int weightDetectCounter = 0;
-    int weightDetectThreshold = 100;
+    int weightDetectThreshold = 5;
         
         int detectWeights() {
 
@@ -82,30 +82,52 @@ struct WeightSensors : public SensorGroup {
             leftUpperVal = leftUpper->averaged;
             int result = 100;
 
+            // debug("left upper sensor value: ");
+            // debugln(leftUpperVal);
+
+            // debug("right upper sensor value: ");
+            // debugln(rightUpperVal);
+
             if (leftVal > left->prox) {
+                debugln("left weight sensor sees something");
                 if (leftUpperVal < leftUpper->prox) {
+                    debugln("left upper weight sensor all clear");
                     // weight detected left
+                    debug("counting up for debouncing: ");
+                    debugln(weightDetectCounter);
+
                     if(weightDetectCounter++ > weightDetectThreshold) {
+                        debugln("debounce limit reached");
                         result = 1;
-                        weightDetectCounter = 0;
+                        // weightDetectCounter = 0;
                     }
                 } else {
                     //wall detected left
+                    debugln("wall detected left");
                     weightDetectCounter = 0;
                     result = 10;
                 }
             } else if (rightVal > right->prox) {
+                debugln("right weight sensor sees something");
                 if (rightUpperVal < rightUpper->prox) {
-                // weight detected right
+                    debugln("right upper weight sensor all clear");
+                    // weight detected right
+                    debug("counting up for debouncing: ");
+                    debugln(weightDetectCounter);
+
                     if(weightDetectCounter++ > weightDetectThreshold) {
+                            debugln("debounce limit reached");
                             result = 2;
-                            weightDetectCounter = 0;
+                            // weightDetectCounter = 0;
                     } 
                 } else {
                     // wall detected right
+                    debugln("wall detected right");
                     weightDetectCounter = 0;
                     result = 11;
                 }
+            } else {
+                weightDetectCounter = 0;
             }
             
             
@@ -128,11 +150,11 @@ struct ObstacleSensors : public SensorGroup {
     leftVal = left->averaged;
 
     if ((rightVal > right->prox) && (leftVal < left->prox)) {
-        // debugln("Obstacle right");
+        debugln("Obstacle right");
         output = 1;
 
     } else if ((rightVal < right->prox) && (leftVal > left->prox)) {
-        // debugln("Obstacle left");
+        debugln("Obstacle left");
         output = 2;
 
     } else if ((rightVal < right->prox) && (leftVal < left->prox)) {
@@ -140,7 +162,7 @@ struct ObstacleSensors : public SensorGroup {
         output = 3;
 
     } else {
-        // debugln("Fully obstructed");
+        debugln("Fully obstructed");
         output = 4;
     }
     return output;

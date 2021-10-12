@@ -81,36 +81,45 @@ void motorControl(int IRVal) {
         if (initial) {
             reverseTimerStart = millis();
             initial = false;
+            debugln("starting reverse sequence");
         }
+        debugln("reversing");
         IRVal = 5;
         currentTime = millis();
+    }
 
     switch(IRVal) {
         case(1):
             turnLeft();
+            debugln("turning left");
             break;
 
         case(2):
+        debugln("turning right");
             turnRight();
             break;
 
         case(3):
             driveStraight();
+            debugln("driving straight");
             break;
 
         case(4):
             reversing = true;
+            debugln("reverse mode set");
         case(5):
             currentTime = millis();
             timeElapsed = currentTime - reverseTimerStart;
             if (timeElapsed < 500) {
+                debugln("reversing, less than 500ms");
                 reverse();
             } else if (timeElapsed < 1000) {
+                debugln("turning left, less than 1000ms");
                 turnLeft();
             } else {
-                
+                reversing = false;
+                debugln("reversing finished");
             }
             break; 
-        }
     }
 }
