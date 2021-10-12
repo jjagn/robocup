@@ -77,6 +77,9 @@ void motorControl(int IRVal) {
     static bool reversing = false;
     static bool initial = true;
 
+    static int reverseTime = 750;
+    static int turnTime = 1500;
+
     if (reversing) {
         if (initial) {
             reverseTimerStart = millis();
@@ -109,14 +112,17 @@ void motorControl(int IRVal) {
             debugln("reverse mode set");
         case(5):
             currentTime = millis();
+
             timeElapsed = currentTime - reverseTimerStart;
-            if (timeElapsed < 500) {
+            if (timeElapsed < reverseTime) {
                 debugln("reversing, less than 500ms");
                 reverse();
-            } else if (timeElapsed < 1000) {
+            } else if (timeElapsed < turnTime) {
                 debugln("turning left, less than 1000ms");
                 turnLeft();
             } else {
+                reverseTime += 100;
+                turnTime += 100;
                 reversing = false;
                 debugln("reversing finished");
             }
