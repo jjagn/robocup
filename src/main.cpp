@@ -187,7 +187,7 @@ void loop() {
             stop();
             //Robot.CheckTimeout();
             if(Robot.pickupState == 5) { // weight pickup complete
-                moveStepper(-5000*2); // -7500*MICROSTEP
+                moveStepper(-5000*2); // -5000*MICROSTEP
                 debugln("pickup complete");
                 Robot.mode = 0;
                 Robot.pickupState = 0;
@@ -202,7 +202,7 @@ void loop() {
 
         case 3: // zeroing 
         {
-            motorControl(Robot.IRResult); // control motors based on sensor output
+            // motorControl(Robot.IRResult); // control motors based on sensor output
             if (digitalRead(carriageContactSwitch) == 0) {
                 Robot.mode = 2;
                 Robot.zeroState = 0;
