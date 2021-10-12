@@ -77,8 +77,8 @@ void motorControl(int IRVal) {
     static bool reversing = false;
     static bool initial = true;
 
-    static int reverseTime = 750;
-    static int turnTime = 1500;
+    static int reverseTime = 500;
+    static int turnTime = 2 * reverseTime;
 
     if (reversing) {
         if (initial) {
@@ -122,7 +122,6 @@ void motorControl(int IRVal) {
                 turnLeft();
             } else {
                 reverseTime += 100;
-                turnTime += 100;
                 reversing = false;
                 debugln("reversing finished");
             }
